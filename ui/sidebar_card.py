@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import Qt
 
 class WeatherCard(QFrame):
     def __init__(self, city, temp=None, cond=None, hi=None, lo=None):
@@ -11,6 +10,9 @@ class WeatherCard(QFrame):
             QFrame {
                 background-color: #262626;
                 border-radius: 15px;
+            }
+            QFrame:hover {
+                background-color: #2d2d2d;
             }
             QLabel {
                 color: white;
@@ -38,7 +40,7 @@ class WeatherCard(QFrame):
 
         # Row 2: condition + hi/lo
         self.row2 = QHBoxLayout()
-        self.cond_label = QLabel(cond or "Loading…")
+        self.cond_label = QLabel(cond or "Loading...")
         self.cond_label.setStyleSheet("font-size: 14px; color: #ccc;")
 
         hilo_text = f"H:{hi}  L:{lo}" if hi and lo else "H:--  L:--"
@@ -56,6 +58,7 @@ class WeatherCard(QFrame):
     # PUBLIC METHOD: allow MainWindow to update card live
     # --------------------------------------------------------
     def update_weather(self, temp, cond, hi, lo):
-        self.temp_label.setText(f"{temp}°C")
+        """Update card with new weather data"""
+        self.temp_label.setText(temp)
         self.cond_label.setText(cond)
         self.hilo_label.setText(f"H:{hi}  L:{lo}")

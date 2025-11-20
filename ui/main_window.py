@@ -1,8 +1,11 @@
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QFrame, QLineEdit, QLabel, QScrollArea, QGridLayout
+    QFrame, QLineEdit, QLabel, QScrollArea
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
+from PyQt5.QtGui import QPixmap
+import requests
+from io import BytesIO
 
 from ui.sidebar_card import WeatherCard
 from tools.weather_api import WeatherAPI
@@ -42,7 +45,7 @@ class MainWindow(QWidget):
         self.setMinimumSize(1200, 700)
 
         # Initialize Weather API (replace with your actual API key)
-        self.weather_api = WeatherAPI("YOUR_API_KEY_HERE")
+        self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
         self.current_city = None
         self.saved_cities = ["London", "Tokyo", "New York"]  # Default cities
         self.city_cards = {}  # Track cards for updates
@@ -335,17 +338,13 @@ class MainWindow(QWidget):
 
     def update_city_card(self, city, data):
         """Update a sidebar city card with fetched data"""
-        if city in self.city_cards and data:
+        if city in self.city_cards:
             card = self.city_cards[city]
-            try:
-                temp = f"{int(data['temperature'])}°"
-                condition = data['description'].title()
-                hi = f"{int(data['temp_max'])}°"
-                lo = f"{int(data['temp_min'])}°"
-                card.update_weather(temp, condition, hi, lo)
-            except (KeyError, TypeError) as e:
-                print(f"Error updating card for {city}: {e}")
-                card.update_weather("--°", "Error", "--°", "--°")
+            temp = f"{int(data['temperature'])}°"
+            condition = data['description'].title()
+            hi = f"{int(data['temp_max'])}°"
+            lo = f"{int(data['temp_min'])}°"
+            card.update_weather(temp, condition, hi, lo)
 
     def load_city_weather(self, city):
         """Load weather for a city when its card is clicked"""

@@ -1,9 +1,22 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from main_window import MainWindow
+from ui.main_window import MainWindow
+
+
+def main():
+    app = QApplication(sys.argv)
+    
+    # Optional: Set application-wide stylesheet with cross-platform fonts
+    app.setStyleSheet("""
+        QWidget {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        }
+    """)
+    
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
-    sys.exit(app.exec_())
+    main()
