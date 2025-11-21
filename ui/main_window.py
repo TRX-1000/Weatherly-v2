@@ -3,9 +3,6 @@ from PyQt5.QtWidgets import (
     QFrame, QLineEdit, QLabel, QScrollArea
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
-from PyQt5.QtGui import QPixmap
-import requests
-from io import BytesIO
 
 from ui.sidebar_card import WeatherCard
 from tools.weather_api import WeatherAPI

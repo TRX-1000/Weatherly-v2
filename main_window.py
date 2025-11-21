@@ -251,6 +251,7 @@ class MainWindow(QWidget):
         
         self.forecast_layout = QHBoxLayout(self.forecast_container)
         self.forecast_layout.setSpacing(15)
+        self.forecast_layout.setAlignment(Qt.AlignCenter)
         self.forecast_layout.setContentsMargins(0, 0, 0, 0)
         
         # Create 5 forecast cards
