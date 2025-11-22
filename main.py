@@ -6,7 +6,6 @@ from ui.main_window import MainWindow
 def main():
     app = QApplication(sys.argv)
     
-    # Optional: Set application-wide stylesheet with cross-platform fonts
     app.setStyleSheet("""
         QWidget {
             font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;

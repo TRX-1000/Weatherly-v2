@@ -61,4 +61,4 @@ class WeatherCard(QFrame):
         """Update card with new weather data"""
         self.temp_label.setText(temp)
         self.cond_label.setText(cond)
-        self.hilo_label.setText(f"H:{hi}  L:{lo}")
+        self.hilo_label.setText(f"H: {hi}  L: {lo}")

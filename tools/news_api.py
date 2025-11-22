@@ -1,25 +1,23 @@
-import requests 
+import feedparser
 
-API_KEY = "e35e9d9cc33d4125b220485f437b8679"
-city = "London"
+RSS_URL = (
+    "https://news.google.com/rss/search?"
+    "q=(Tokyo+AND+(weather+OR+storm+OR+typhoon+OR+rain+OR+flood+OR+heatwave))"
+    "&hl=en-IN&gl=IN&ceid=IN:en"
+)
 
-url = "http://newsapi.org/v2/everything"
-params = {
-    "q": f"weather {city}",
-    "pageSize": 5,
-    "sortBy": "publishedAt",
-    "language": "en",
-    "apiKey": API_KEY
-}
+feed = feedparser.parse(RSS_URL)
 
-response = requests.get(url, params=params)
-print(response.status_code)
-print(response.text)
+for entry in feed.entries[:10]:
+    print("TITLE:", entry.title)
+    print("SOURCE:", entry.get("source", {}).get("title", "Unknown"))
+    print("PUBLISHED:", entry.get("published", "N/A"))
 
-data = response.json()
+    # Summary
+    summary = entry.get("summary", "").replace("<b>", "").replace("</b>", "")
+    print("SUMMARY:", summary)
 
-for article in data.get("articles", []):
-    print(f"{article['title']} ({article['source']['name']})")
-    print(article['description'])
-    print(article['url'])
-    print()
+    # ← This is the URL the user taps for more details
+    print("LEARN MORE:", entry.link)
+
+    print("-" * 80)
