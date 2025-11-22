@@ -1,3 +1,5 @@
+import json
+import os
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
     QFrame, QLineEdit, QLabel, QScrollArea
@@ -5,7 +7,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
 
 from ui.sidebar_card import WeatherCard
+from ui.news_card import NewsCard
 from tools.weather_api import WeatherAPI
+from tools.news_api import NewsAPI
 
 
 class WeatherWorker(QThread):
@@ -41,15 +45,21 @@ class MainWindow(QWidget):
         self.setWindowTitle("Weatherly")
         self.setMinimumSize(1200, 700)
 
-        # Initialize Weather API (replace with your actual API key)
+        # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
+        self.news_api = NewsAPI()
         self.current_city = None
-        self.saved_cities = ["London", "Tokyo", "New York"]  # Default cities
-        self.city_cards = {}  # Track cards for updates
+        self.saved_cities = []
+        self.city_cards = {}
+        self.news_workers = []
+        
+        # Load saved cities from file
+        self.cities_file = "saved_cities.json"
+        self.load_cities_from_file()
 
         self.sidebar_collapsed = 0
-        self.sidebar_expanded = 260
-        self.current_sidebar_width = self.sidebar_collapsed
+        self.sidebar_expanded = 280
+        self.current_sidebar_width = self.sidebar_expanded  # Start expanded
 
         self.root = QHBoxLayout(self)
         self.root.setContentsMargins(0, 0, 0, 0)
@@ -58,8 +68,72 @@ class MainWindow(QWidget):
         # ---------------- SIDEBAR ----------------
         self.sidebar = QFrame()
         self.sidebar.setStyleSheet("background-color: #1a1a1a;")
-        self.sidebar.setFixedWidth(self.sidebar_collapsed)
+        self.sidebar.setMinimumWidth(self.sidebar_expanded)
+        self.sidebar.setMaximumWidth(self.sidebar_expanded)
 
+        sidebar_main_layout = QVBoxLayout(self.sidebar)
+        sidebar_main_layout.setContentsMargins(0, 0, 0, 0)
+        sidebar_main_layout.setSpacing(0)
+
+        # Sidebar header with menu button
+        sidebar_header = QFrame()
+        sidebar_header.setStyleSheet("background-color: #1a1a1a;")
+        header_layout = QHBoxLayout(sidebar_header)
+        header_layout.setContentsMargins(15, 15, 15, 10)
+        header_layout.setSpacing(10)
+
+        self.menu_button = QPushButton("☰")
+        self.menu_button.setFixedSize(40, 40)
+        self.menu_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px; 
+                border: none; 
+                border-radius: 8px;
+                background: #262626; 
+                color: white;
+            }
+            QPushButton:hover { background: #333; }
+        """)
+        self.menu_button.clicked.connect(self.toggle_sidebar)
+
+        sidebar_title = QLabel("Weatherly")
+        sidebar_title.setStyleSheet("font-size: 20px; font-weight: bold; color: white;")
+
+        header_layout.addWidget(self.menu_button)
+        header_layout.addWidget(sidebar_title)
+        header_layout.addStretch()
+
+        # Search bar in sidebar
+        search_container = QFrame()
+        search_container.setStyleSheet("background-color: #1a1a1a;")
+        search_layout = QVBoxLayout(search_container)
+        search_layout.setContentsMargins(15, 5, 15, 15)
+
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("🔎 Search location...")
+        self.search_bar.setFixedHeight(40)
+        self.search_bar.setStyleSheet("""
+            QLineEdit {
+                background: #262626;
+                border-radius: 20px;
+                padding-left: 15px;
+                padding-right: 15px;
+                color: white;
+                font-size: 14px;
+                border: 1px solid #333;
+            }
+            QLineEdit::placeholder {
+                color: #777;
+            }
+            QLineEdit:focus {
+                border: 1px solid #444;
+            }
+        """)
+        self.search_bar.returnPressed.connect(self.search_weather)
+
+        search_layout.addWidget(self.search_bar)
+
+        # Scrollable cities list
         sidebar_scroll = QScrollArea()
         sidebar_scroll.setWidgetResizable(True)
         sidebar_scroll.setStyleSheet("""
@@ -80,17 +154,16 @@ class MainWindow(QWidget):
 
         sidebar_content = QWidget()
         self.sidebar_layout = QVBoxLayout(sidebar_content)
-        self.sidebar_layout.setContentsMargins(12, 12, 12, 12)
+        self.sidebar_layout.setContentsMargins(12, 5, 12, 12)
         self.sidebar_layout.setSpacing(12)
 
-        # Load saved city cards
         self.load_saved_cities()
         self.sidebar_layout.addStretch()
 
         sidebar_scroll.setWidget(sidebar_content)
         
-        sidebar_main_layout = QVBoxLayout(self.sidebar)
-        sidebar_main_layout.setContentsMargins(0, 0, 0, 0)
+        sidebar_main_layout.addWidget(sidebar_header)
+        sidebar_main_layout.addWidget(search_container)
         sidebar_main_layout.addWidget(sidebar_scroll)
 
         # ---------------- RIGHT PANEL ----------------
@@ -101,13 +174,14 @@ class MainWindow(QWidget):
         right_layout.setContentsMargins(20, 20, 20, 20)
         right_layout.setSpacing(15)
 
-        # Top Bar
+        # Top Bar - just refresh button and menu button when collapsed
         top_bar = QHBoxLayout()
         top_bar.setSpacing(12)
 
-        self.menu_button = QPushButton("☰")
-        self.menu_button.setFixedSize(45, 45)
-        self.menu_button.setStyleSheet("""
+        # Menu button that appears when sidebar is collapsed
+        self.floating_menu_button = QPushButton("☰")
+        self.floating_menu_button.setFixedSize(45, 45)
+        self.floating_menu_button.setStyleSheet("""
             QPushButton {
                 font-size: 22px; 
                 border: none; 
@@ -117,24 +191,11 @@ class MainWindow(QWidget):
             }
             QPushButton:hover { background: #333; }
         """)
-        self.menu_button.clicked.connect(self.toggle_sidebar)
-
-        self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("🔎 Search for a place... (e.g., 'London' or 'Paris,FR')")
-        self.search_bar.setFixedHeight(45)
-        self.search_bar.setStyleSheet("""
-            QLineEdit {
-                background: #262626;
-                border-radius: 22px;
-                padding-left: 20px;
-                color: white;
-                font-size: 16px;
-            }
-            QLineEdit::placeholder {
-                color: #777;
-            }
-        """)
-        self.search_bar.returnPressed.connect(self.search_weather)
+        self.floating_menu_button.clicked.connect(self.toggle_sidebar)
+        self.floating_menu_button.hide()  # Hidden by default
+        
+        top_bar.addWidget(self.floating_menu_button)
+        top_bar.addStretch()
 
         self.refresh_button = QPushButton("↻")
         self.refresh_button.setFixedSize(45, 45)
@@ -149,18 +210,38 @@ class MainWindow(QWidget):
         """)
         self.refresh_button.clicked.connect(self.refresh_weather)
 
-        top_bar.addWidget(self.menu_button)
-        top_bar.addWidget(self.search_bar)
         top_bar.addWidget(self.refresh_button)
 
         right_layout.addLayout(top_bar)
 
-        # Main Content Area
-        self.content = QFrame()
-        self.content.setStyleSheet("background: #181818; border-radius: 14px;")
+        # Main Content Area with Scroll
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                background: #111;
+                width: 10px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical {
+                background: #333;
+                border-radius: 5px;
+                min-height: 30px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #444;
+            }
+        """)
+
+        scroll_content = QWidget()
+        scroll_content.setStyleSheet("background: transparent;")
         
-        self.content_layout = QVBoxLayout(self.content)
-        self.content_layout.setContentsMargins(30, 30, 30, 30)
+        self.content_layout = QVBoxLayout(scroll_content)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(20)
 
         # Current weather display
@@ -168,8 +249,14 @@ class MainWindow(QWidget):
         
         # 5-day forecast display
         self.create_forecast_section()
+        
+        # News section
+        self.create_news_section()
 
-        right_layout.addWidget(self.content)
+        self.content_layout.addStretch()
+
+        self.scroll_area.setWidget(scroll_content)
+        right_layout.addWidget(self.scroll_area)
 
         # Add sidebar + main
         self.root.addWidget(self.sidebar)
@@ -177,16 +264,39 @@ class MainWindow(QWidget):
 
         # Animations
         self.sidebar_anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
-        self.sidebar_anim.setDuration(300)
-        self.sidebar_anim.setEasingCurve(QEasingCurve.InOutCubic)
+        self.sidebar_anim.setDuration(250)  # Snappier - reduced from 300ms
+        self.sidebar_anim.setEasingCurve(QEasingCurve.OutCubic)  # Snappier easing
+        
+        self.sidebar_max_anim = QPropertyAnimation(self.sidebar, b"maximumWidth")
+        self.sidebar_max_anim.setDuration(250)  # Snappier - reduced from 300ms
+        self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)  # Snappier easing
 
-        self.search_anim = QPropertyAnimation(self.search_bar, b"maximumWidth")
-        self.search_anim.setDuration(300)
-        self.search_anim.setEasingCurve(QEasingCurve.InOutCubic)
+        # Load default city if available
+        if self.saved_cities:
+            self.search_bar.setText(self.saved_cities[0])
+            self.search_weather()
 
-        # Load default city
-        self.search_bar.setText("London")
-        self.search_weather()
+    # ---------------- City Persistence ----------------
+    def load_cities_from_file(self):
+        """Load saved cities from JSON file"""
+        if os.path.exists(self.cities_file):
+            try:
+                with open(self.cities_file, 'r') as f:
+                    self.saved_cities = json.load(f)
+            except Exception as e:
+                print(f"Error loading cities: {e}")
+                self.saved_cities = ["London", "Tokyo", "New York"]
+        else:
+            # Default cities if no file exists
+            self.saved_cities = ["London", "Tokyo", "New York"]
+    
+    def save_cities_to_file(self):
+        """Save cities to JSON file"""
+        try:
+            with open(self.cities_file, 'w') as f:
+                json.dump(self.saved_cities, f, indent=2)
+        except Exception as e:
+            print(f"Error saving cities: {e}")
 
     # ---------------- UI Sections ----------------
     def create_current_weather_section(self):
@@ -194,39 +304,36 @@ class MainWindow(QWidget):
         self.current_section = QFrame()
         self.current_section.setStyleSheet("""
             QFrame {
-                background: #262626;
-                border-radius: 14px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #262626, stop:1 #1e1e1e);
+                border-radius: 20px;
             }
         """)
         
         current_layout = QVBoxLayout(self.current_section)
-        current_layout.setContentsMargins(25, 25, 25, 25)
+        current_layout.setContentsMargins(35, 35, 35, 35)
         current_layout.setSpacing(15)
 
-        # City name
         self.city_label = QLabel("Select a city to view weather")
-        self.city_label.setStyleSheet("font-size: 32px; font-weight: bold; color: white;")
+        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white;")
         
-        # Temperature
         self.temp_label = QLabel("--°C")
-        self.temp_label.setStyleSheet("font-size: 72px; font-weight: bold; color: white;")
+        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white;")
         
-        # Description
         self.description_label = QLabel("--")
-        self.description_label.setStyleSheet("font-size: 20px; color: #ccc;")
+        self.description_label.setStyleSheet("font-size: 22px; color: #ccc;")
         
-        # Details grid
         details_layout = QHBoxLayout()
-        details_layout.setSpacing(30)
+        details_layout.setSpacing(40)
         
         self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 16px; color: #aaa;")
+        self.feels_like_label.setStyleSheet("font-size: 17px; color: #aaa;")
         
         self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 16px; color: #aaa;")
+        self.humidity_label.setStyleSheet("font-size: 17px; color: #aaa;")
         
         self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 16px; color: #aaa;")
+        self.wind_label.setStyleSheet("font-size: 17px; color: #aaa;")
         
         details_layout.addWidget(self.feels_like_label)
         details_layout.addWidget(self.humidity_label)
@@ -243,7 +350,12 @@ class MainWindow(QWidget):
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
         forecast_header = QLabel("5-Day Forecast")
-        forecast_header.setStyleSheet("font-size: 24px; font-weight: bold; color: white;")
+        forecast_header.setStyleSheet("""
+            font-size: 26px; 
+            font-weight: bold; 
+            color: white;
+            padding-left: 5px;
+        """)
         self.content_layout.addWidget(forecast_header)
         
         self.forecast_container = QFrame()
@@ -253,7 +365,6 @@ class MainWindow(QWidget):
         self.forecast_layout.setSpacing(15)
         self.forecast_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Create 5 forecast cards
         self.forecast_cards = []
         for i in range(5):
             card = self.create_forecast_card()
@@ -261,7 +372,6 @@ class MainWindow(QWidget):
             self.forecast_layout.addWidget(card)
         
         self.content_layout.addWidget(self.forecast_container)
-        self.content_layout.addStretch()
 
     def create_forecast_card(self):
         """Create a single forecast day card"""
@@ -269,26 +379,29 @@ class MainWindow(QWidget):
         card.setStyleSheet("""
             QFrame {
                 background: #262626;
-                border-radius: 12px;
+                border-radius: 16px;
+            }
+            QFrame:hover {
+                background: #2d2d2d;
             }
         """)
-        card.setFixedSize(180, 200)
+        card.setFixedSize(190, 220)
         
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(10)
+        layout.setContentsMargins(15, 20, 15, 20)
+        layout.setSpacing(12)
         layout.setAlignment(Qt.AlignCenter)
         
         day_label = QLabel("--")
-        day_label.setStyleSheet("font-size: 18px; font-weight: bold; color: white;")
+        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white;")
         day_label.setAlignment(Qt.AlignCenter)
         
         icon_label = QLabel("🌤️")
-        icon_label.setStyleSheet("font-size: 48px;")
+        icon_label.setStyleSheet("font-size: 52px;")
         icon_label.setAlignment(Qt.AlignCenter)
         
         temp_label = QLabel("--°")
-        temp_label.setStyleSheet("font-size: 24px; font-weight: bold; color: white;")
+        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white;")
         temp_label.setAlignment(Qt.AlignCenter)
         
         desc_label = QLabel("--")
@@ -301,7 +414,6 @@ class MainWindow(QWidget):
         layout.addWidget(temp_label)
         layout.addWidget(desc_label)
         
-        # Store references for updating
         card.day_label = day_label
         card.icon_label = icon_label
         card.temp_label = temp_label
@@ -309,29 +421,65 @@ class MainWindow(QWidget):
         
         return card
 
+    def create_news_section(self):
+        """Create the news section"""
+        news_header = QLabel("📰 Weather News")
+        news_header.setStyleSheet("""
+            font-size: 26px; 
+            font-weight: bold; 
+            color: white;
+            padding-left: 5px;
+            margin-top: 10px;
+        """)
+        self.content_layout.addWidget(news_header)
+        
+        self.news_container = QFrame()
+        self.news_container.setStyleSheet("background: transparent;")
+        
+        self.news_layout = QVBoxLayout(self.news_container)
+        self.news_layout.setSpacing(15)
+        self.news_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.content_layout.addWidget(self.news_container)
+
     # ---------------- Weather Data Fetching ----------------
     def load_saved_cities(self):
         """Load weather cards for saved cities"""
         for city in self.saved_cities:
             card = WeatherCard(city)
-            card.mousePressEvent = lambda event, c=city: self.load_city_weather(c)
+            card.city_name = city
+            card.mousePressEvent = self.create_card_click_handler(city)
             card.setCursor(Qt.PointingHandCursor)
             self.city_cards[city] = card
             self.sidebar_layout.addWidget(card)
             
-            # Fetch weather for this city
             self.fetch_city_weather(city)
+    
+    def create_card_click_handler(self, city):
+        """Create a click handler for a city card"""
+        def handler(event):
+            self.load_city_weather(city)
+        return handler
 
     def fetch_city_weather(self, city):
         """Fetch weather for a sidebar city card"""
-        worker = WeatherWorker(self.weather_api, city, "current")
-        worker.finished.connect(lambda data: self.update_city_card(city, data))
-        worker.error.connect(lambda err: print(f"Error loading {city}: {err}"))
-        worker.start()
-        # Keep reference to prevent garbage collection
-        if not hasattr(self, 'workers'):
-            self.workers = []
-        self.workers.append(worker)
+        try:
+            worker = WeatherWorker(self.weather_api, city, "current")
+            worker.finished.connect(lambda data, c=city: self.update_city_card(c, data))
+            worker.error.connect(lambda err: self.handle_city_card_error(city, err))
+            worker.start()
+            if not hasattr(self, 'workers'):
+                self.workers = []
+            self.workers.append(worker)
+        except Exception as e:
+            print(f"Error creating worker for {city}: {e}")
+    
+    def handle_city_card_error(self, city, err):
+        """Handle errors when loading city card weather"""
+        print(f"Error loading {city}: {err}")
+        if city in self.city_cards:
+            card = self.city_cards[city]
+            card.update_weather("--°", "Error", "--°", "--°")
 
     def update_city_card(self, city, data):
         """Update a sidebar city card with fetched data"""
@@ -345,8 +493,13 @@ class MainWindow(QWidget):
 
     def load_city_weather(self, city):
         """Load weather for a city when its card is clicked"""
-        self.search_bar.setText(city)
-        self.search_weather()
+        try:
+            self.search_bar.setText(city)
+            self.search_weather()
+        except Exception as e:
+            print(f"Error loading city weather: {e}")
+            import traceback
+            traceback.print_exc()
 
     def search_weather(self):
         """Search and display weather for the city in search bar"""
@@ -354,24 +507,131 @@ class MainWindow(QWidget):
         if not city:
             return
         
-        self.current_city = city
+        try:
+            self.current_city = city
+            
+            # Add city to sidebar if not already there
+            self.add_city_to_sidebar(city)
+            
+            # Fetch current weather
+            current_worker = WeatherWorker(self.weather_api, city, "current")
+            current_worker.finished.connect(self.update_current_weather)
+            current_worker.error.connect(self.show_error)
+            current_worker.start()
+            
+            # Fetch forecast
+            forecast_worker = WeatherWorker(self.weather_api, city, "forecast")
+            forecast_worker.finished.connect(self.update_forecast)
+            forecast_worker.error.connect(self.show_error)
+            forecast_worker.start()
+            
+            # Fetch news
+            self.fetch_news(city)
+            
+            if not hasattr(self, 'workers'):
+                self.workers = []
+            self.workers.extend([current_worker, forecast_worker])
+        except Exception as e:
+            print(f"Error in search_weather: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def add_city_to_sidebar(self, city):
+        """Add a city to the sidebar if it doesn't exist"""
+        # Check if city already exists (case-insensitive)
+        city_lower = city.lower()
+        for existing_city in self.saved_cities:
+            if existing_city.lower() == city_lower:
+                return  # City already exists
         
-        # Fetch current weather
-        current_worker = WeatherWorker(self.weather_api, city, "current")
-        current_worker.finished.connect(self.update_current_weather)
-        current_worker.error.connect(self.show_error)
-        current_worker.start()
+        # Add to saved cities list
+        self.saved_cities.append(city)
+        self.save_cities_to_file()  # Save to file
         
-        # Fetch forecast
-        forecast_worker = WeatherWorker(self.weather_api, city, "forecast")
-        forecast_worker.finished.connect(self.update_forecast)
-        forecast_worker.error.connect(self.show_error)
-        forecast_worker.start()
+        # Create new card
+        card = WeatherCard(city)
+        card.city_name = city
+        card.mousePressEvent = self.create_card_click_handler(city)
+        card.setCursor(Qt.PointingHandCursor)
+        self.city_cards[city] = card
         
-        # Keep references
-        if not hasattr(self, 'workers'):
-            self.workers = []
-        self.workers.extend([current_worker, forecast_worker])
+        # Insert before the stretch at the end
+        stretch_item = self.sidebar_layout.takeAt(self.sidebar_layout.count() - 1)
+        self.sidebar_layout.addWidget(card)
+        if stretch_item:
+            self.sidebar_layout.addItem(stretch_item)
+        
+        # Fetch weather for the new card
+        self.fetch_city_weather(city)
+
+    def fetch_news(self, city):
+        """Fetch weather news for the city"""
+        # Clear existing news
+        self.clear_news()
+        
+        # Create and show loading indicator
+        loading_label = QLabel(f"🔄 Loading news for {city}...")
+        loading_label.setStyleSheet("""
+            font-size: 15px; 
+            color: #888;
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+        """)
+        loading_label.setAlignment(Qt.AlignCenter)
+        self.news_layout.addWidget(loading_label)
+        
+        # Fetch news
+        worker = self.news_api.get_weather_news(city, self.update_news, self.show_news_error)
+        self.news_workers.append(worker)
+
+    def clear_news(self):
+        """Clear existing news cards"""
+        while self.news_layout.count() > 0:
+            item = self.news_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+    def update_news(self, news_items):
+        """Update news display"""
+        self.clear_news()
+        
+        if not news_items:
+            no_news_label = QLabel("📭 No recent weather news found for this location.")
+            no_news_label.setStyleSheet("""
+                font-size: 15px; 
+                color: #888;
+                background: #1e1e1e;
+                border-radius: 12px;
+                padding: 25px;
+            """)
+            no_news_label.setAlignment(Qt.AlignCenter)
+            self.news_layout.addWidget(no_news_label)
+            return
+        
+        for item in news_items:
+            news_card = NewsCard(
+                item["title"],
+                item["source"],
+                item["published"],
+                item["summary"],
+                item["link"]
+            )
+            self.news_layout.addWidget(news_card)
+
+    def show_news_error(self, error_msg):
+        """Display news error"""
+        self.clear_news()
+        error_label = QLabel(f"⚠️ Error loading news: {error_msg}")
+        error_label.setStyleSheet("""
+            font-size: 15px; 
+            color: #ff6b6b;
+            background: #2a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+        """)
+        error_label.setAlignment(Qt.AlignCenter)
+        self.news_layout.addWidget(error_label)
 
     def update_current_weather(self, data):
         """Update current weather display"""
@@ -384,23 +644,15 @@ class MainWindow(QWidget):
 
     def update_forecast(self, data):
         """Update 5-day forecast display"""
-        daily = data['daily'][:5]  # Get first 5 days
+        daily = data['daily'][:5]
         
         for i, day_data in enumerate(daily):
             if i < len(self.forecast_cards):
                 card = self.forecast_cards[i]
-                
-                # Update day name
-                card.day_label.setText(day_data['day_name'][:3])  # Mon, Tue, etc.
-                
-                # Update temperature
+                card.day_label.setText(day_data['day_name'][:3])
                 avg_temp = int(day_data['temp_avg'])
                 card.temp_label.setText(f"{avg_temp}°C")
-                
-                # Update description
                 card.desc_label.setText(day_data['description'].title())
-                
-                # Map weather icons
                 icon = self.get_weather_emoji(day_data['description'])
                 card.icon_label.setText(icon)
 
@@ -434,7 +686,6 @@ class MainWindow(QWidget):
         if self.current_city:
             self.search_weather()
         
-        # Also refresh sidebar cities
         for city in self.saved_cities:
             self.fetch_city_weather(city)
 
@@ -447,24 +698,30 @@ class MainWindow(QWidget):
 
     def expand_sidebar(self):
         self.current_sidebar_width = self.sidebar_expanded
-        diff = self.sidebar_expanded - self.sidebar_collapsed
 
+        # Hide floating menu button
+        self.floating_menu_button.hide()
+
+        # Animate both minimum and maximum width for smooth animation
         self.sidebar_anim.setStartValue(self.sidebar.width())
         self.sidebar_anim.setEndValue(self.sidebar_expanded)
         self.sidebar_anim.start()
-
-        self.search_anim.setStartValue(self.search_bar.width())
-        self.search_anim.setEndValue(max(150, self.search_bar.width() - diff))
-        self.search_anim.start()
+        
+        self.sidebar_max_anim.setStartValue(self.sidebar.maximumWidth())
+        self.sidebar_max_anim.setEndValue(self.sidebar_expanded)
+        self.sidebar_max_anim.start()
 
     def collapse_sidebar(self):
         self.current_sidebar_width = self.sidebar_collapsed
-        diff = self.sidebar_expanded - self.sidebar_collapsed
 
+        # Show floating menu button when collapsed
+        self.floating_menu_button.show()
+
+        # Animate both minimum and maximum width for smooth animation
         self.sidebar_anim.setStartValue(self.sidebar.width())
         self.sidebar_anim.setEndValue(self.sidebar_collapsed)
         self.sidebar_anim.start()
-
-        self.search_anim.setStartValue(self.search_bar.width())
-        self.search_anim.setEndValue(self.search_bar.width() + diff)
-        self.search_anim.start()
+        
+        self.sidebar_max_anim.setStartValue(self.sidebar.maximumWidth())
+        self.sidebar_max_anim.setEndValue(self.sidebar_collapsed)
+        self.sidebar_max_anim.start()
