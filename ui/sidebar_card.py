@@ -29,6 +29,8 @@ class WeatherCard(QFrame):
         # Row 1: city + temp
         self.row1 = QHBoxLayout()
         self.city_label = QLabel(self.city)
+        city_label_capitalized = self.city_label.text().capitalize()
+        self.city_label.setText(city_label_capitalized)
         self.city_label.setStyleSheet("font-size: 18px; font-weight: bold;")
 
         self.temp_label = QLabel(temp or "--°C")

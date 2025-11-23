@@ -2,9 +2,10 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QFrame, QLineEdit, QLabel, QScrollArea
+    QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
+from PyQt5.QtGui import QCursor
 
 from ui.sidebar_card import WeatherCard
 from ui.news_card import NewsCard
@@ -67,7 +68,7 @@ class MainWindow(QWidget):
 
         # ---------------- SIDEBAR ----------------
         self.sidebar = QFrame()
-        self.sidebar.setStyleSheet("background-color: #1a1a1a;")
+        self.sidebar.setStyleSheet("background-color: #1a1a1a; background:none;")
         self.sidebar.setMinimumWidth(self.sidebar_expanded)
         self.sidebar.setMaximumWidth(self.sidebar_expanded)
 
@@ -77,7 +78,7 @@ class MainWindow(QWidget):
 
         # Sidebar header with menu button
         sidebar_header = QFrame()
-        sidebar_header.setStyleSheet("background-color: #1a1a1a;")
+        sidebar_header.setStyleSheet("background-color: #1a1a1a; background: none;")
         header_layout = QHBoxLayout(sidebar_header)
         header_layout.setContentsMargins(15, 15, 15, 10)
         header_layout.setSpacing(10)
@@ -174,11 +175,12 @@ class MainWindow(QWidget):
         right_layout.setContentsMargins(20, 20, 20, 20)
         right_layout.setSpacing(15)
 
-        # Top Bar - just refresh button and menu button when collapsed
-        top_bar = QHBoxLayout()
-        top_bar.setSpacing(12)
+        # Top Bar - Container for centering
+        top_bar_container = QHBoxLayout()
+        top_bar_container.setContentsMargins(0, 0, 0, 0)
+        top_bar_container.setSpacing(0)
 
-        # Menu button that appears when sidebar is collapsed
+        # Left side - Menu button (when collapsed)
         self.floating_menu_button = QPushButton("☰")
         self.floating_menu_button.setFixedSize(45, 45)
         self.floating_menu_button.setStyleSheet("""
@@ -192,11 +194,13 @@ class MainWindow(QWidget):
             QPushButton:hover { background: #333; }
         """)
         self.floating_menu_button.clicked.connect(self.toggle_sidebar)
-        self.floating_menu_button.hide()  # Hidden by default
-        
-        top_bar.addWidget(self.floating_menu_button)
-        top_bar.addStretch()
+        self.floating_menu_button.hide()
 
+        # Center spacer (pushes content to center)
+        center_spacer = QWidget()
+        center_spacer.setSizePolicy(center_spacer.sizePolicy().Expanding, center_spacer.sizePolicy().Fixed)
+
+        # Right side - Refresh button
         self.refresh_button = QPushButton("↻")
         self.refresh_button.setFixedSize(45, 45)
         self.refresh_button.setStyleSheet("""
@@ -210,9 +214,11 @@ class MainWindow(QWidget):
         """)
         self.refresh_button.clicked.connect(self.refresh_weather)
 
-        top_bar.addWidget(self.refresh_button)
+        top_bar_container.addWidget(self.floating_menu_button)
+        top_bar_container.addWidget(center_spacer)
+        top_bar_container.addWidget(self.refresh_button)
 
-        right_layout.addLayout(top_bar)
+        right_layout.addLayout(top_bar_container)
 
         # Main Content Area with Scroll
         self.scroll_area = QScrollArea()
@@ -264,12 +270,12 @@ class MainWindow(QWidget):
 
         # Animations
         self.sidebar_anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
-        self.sidebar_anim.setDuration(250)  # Snappier - reduced from 300ms
-        self.sidebar_anim.setEasingCurve(QEasingCurve.OutCubic)  # Snappier easing
+        self.sidebar_anim.setDuration(250)
+        self.sidebar_anim.setEasingCurve(QEasingCurve.OutCubic)
         
         self.sidebar_max_anim = QPropertyAnimation(self.sidebar, b"maximumWidth")
-        self.sidebar_max_anim.setDuration(250)  # Snappier - reduced from 300ms
-        self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)  # Snappier easing
+        self.sidebar_max_anim.setDuration(250)
+        self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)
 
         # Load default city if available
         if self.saved_cities:
@@ -304,8 +310,6 @@ class MainWindow(QWidget):
         self.current_section = QFrame()
         self.current_section.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #262626, stop:1 #1e1e1e);
                 border-radius: 20px;
             }
         """)
@@ -315,25 +319,25 @@ class MainWindow(QWidget):
         current_layout.setSpacing(15)
 
         self.city_label = QLabel("Select a city to view weather")
-        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white;")
+        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; background: none;")
         
         self.temp_label = QLabel("--°C")
-        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white;")
+        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white; background: none;")
         
         self.description_label = QLabel("--")
-        self.description_label.setStyleSheet("font-size: 22px; color: #ccc;")
+        self.description_label.setStyleSheet("font-size: 22px; color: #ccc; background: none;")
         
         details_layout = QHBoxLayout()
         details_layout.setSpacing(40)
         
         self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 17px; color: #aaa;")
+        self.feels_like_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
         
         self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 17px; color: #aaa;")
+        self.humidity_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
         
         self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 17px; color: #aaa;")
+        self.wind_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
         
         details_layout.addWidget(self.feels_like_label)
         details_layout.addWidget(self.humidity_label)
@@ -355,6 +359,7 @@ class MainWindow(QWidget):
             font-weight: bold; 
             color: white;
             padding-left: 5px;
+            background: none;
         """)
         self.content_layout.addWidget(forecast_header)
         
@@ -378,11 +383,7 @@ class MainWindow(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
-                background: #262626;
                 border-radius: 16px;
-            }
-            QFrame:hover {
-                background: #2d2d2d;
             }
         """)
         card.setFixedSize(190, 220)
@@ -393,19 +394,19 @@ class MainWindow(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         
         day_label = QLabel("--")
-        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white;")
+        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white; background: none;")
         day_label.setAlignment(Qt.AlignCenter)
         
         icon_label = QLabel("🌤️")
-        icon_label.setStyleSheet("font-size: 52px;")
+        icon_label.setStyleSheet("font-size: 52px; background: none;")
         icon_label.setAlignment(Qt.AlignCenter)
         
         temp_label = QLabel("--°")
-        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white;")
+        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white; background: none;")
         temp_label.setAlignment(Qt.AlignCenter)
         
         desc_label = QLabel("--")
-        desc_label.setStyleSheet("font-size: 14px; color: #aaa;")
+        desc_label.setStyleSheet("font-size: 14px; color: #aaa; background: none;")
         desc_label.setAlignment(Qt.AlignCenter)
         desc_label.setWordWrap(True)
         
@@ -446,27 +447,68 @@ class MainWindow(QWidget):
     def load_saved_cities(self):
         """Load weather cards for saved cities"""
         for city in self.saved_cities:
-            card = WeatherCard(city)
-            card.city_name = city
-            card.mousePressEvent = self.create_card_click_handler(city)
-            card.setCursor(Qt.PointingHandCursor)
-            self.city_cards[city] = card
-            self.sidebar_layout.addWidget(card)
-            
-            self.fetch_city_weather(city)
+            self.create_city_card(city)
     
-    def create_card_click_handler(self, city):
+    def create_city_card(self, city):
+        """Create a city card with all event handlers"""
+        card = WeatherCard(city)
+        card.city_name = city
+        
+        # Left click handler
+        card.mousePressEvent = self.create_card_click_handler(city, card)
+        
+        # Right click context menu
+        card.setContextMenuPolicy(Qt.CustomContextMenu)
+        card.customContextMenuRequested.connect(lambda pos, c=city, w=card: self.show_city_context_menu(pos, c, w))
+        
+        card.setCursor(QCursor(Qt.PointingHandCursor))
+        self.city_cards[city] = card
+        self.sidebar_layout.addWidget(card)
+        
+        # Fetch weather for this card
+        self.fetch_city_weather(city)
+    
+    def create_card_click_handler(self, city, card):
         """Create a click handler for a city card"""
         def handler(event):
-            self.load_city_weather(city)
+            # Only handle left clicks
+            if event.button() == Qt.LeftButton:
+                self.load_city_weather(city)
         return handler
+    
+    def show_city_context_menu(self, position, city, card):
+        """Show context menu for city card"""
+        context_menu = QMenu(self)
+        context_menu.setStyleSheet("""
+            QMenu {
+                background-color: #262626;
+                color: white;
+                border: 1px solid #444;
+                border-radius: 8px;
+                padding: 5px;
+            }
+            QMenu::item {
+                padding: 8px 20px;
+                border-radius: 4px;
+            }
+            QMenu::item:selected {
+                background-color: #333;
+            }
+        """)
+        
+        delete_action = QAction("🗑️ Delete", self)
+        delete_action.triggered.connect(lambda: self.delete_city(city, card))
+        context_menu.addAction(delete_action)
+        
+        # Show menu at cursor position
+        context_menu.exec_(card.mapToGlobal(position))
 
     def fetch_city_weather(self, city):
         """Fetch weather for a sidebar city card"""
         try:
             worker = WeatherWorker(self.weather_api, city, "current")
             worker.finished.connect(lambda data, c=city: self.update_city_card(c, data))
-            worker.error.connect(lambda err: self.handle_city_card_error(city, err))
+            worker.error.connect(lambda err, c=city: self.handle_city_card_error(c, err))
             worker.start()
             if not hasattr(self, 'workers'):
                 self.workers = []
@@ -546,23 +588,45 @@ class MainWindow(QWidget):
         
         # Add to saved cities list
         self.saved_cities.append(city)
-        self.save_cities_to_file()  # Save to file
-        
-        # Create new card
-        card = WeatherCard(city)
-        card.city_name = city
-        card.mousePressEvent = self.create_card_click_handler(city)
-        card.setCursor(Qt.PointingHandCursor)
-        self.city_cards[city] = card
+        self.save_cities_to_file()
         
         # Insert before the stretch at the end
         stretch_item = self.sidebar_layout.takeAt(self.sidebar_layout.count() - 1)
-        self.sidebar_layout.addWidget(card)
+        
+        # Create the card
+        self.create_city_card(city)
+        
+        # Add stretch back
         if stretch_item:
             self.sidebar_layout.addItem(stretch_item)
-        
-        # Fetch weather for the new card
-        self.fetch_city_weather(city)
+    
+    def delete_city(self, city, card):
+        """Delete a city from the sidebar"""
+        try:
+            # Remove from saved cities list
+            if city in self.saved_cities:
+                self.saved_cities.remove(city)
+                self.save_cities_to_file()
+            
+            # Remove from city cards dict
+            if city in self.city_cards:
+                del self.city_cards[city]
+            
+            # Remove the card widget
+            self.sidebar_layout.removeWidget(card)
+            card.deleteLater()
+            
+            # If this was the current city, clear the display
+            if self.current_city == city:
+                self.current_city = None
+                self.city_label.setText("Select a city to view weather")
+                self.temp_label.setText("--°C")
+                self.description_label.setText("--")
+                self.clear_news()
+        except Exception as e:
+            print(f"Error deleting city: {e}")
+            import traceback
+            traceback.print_exc()
 
     def fetch_news(self, city):
         """Fetch weather news for the city"""
@@ -714,7 +778,7 @@ class MainWindow(QWidget):
     def collapse_sidebar(self):
         self.current_sidebar_width = self.sidebar_collapsed
 
-        # Show floating menu button when collapsed
+        # Show floating menu button
         self.floating_menu_button.show()
 
         # Animate both minimum and maximum width for smooth animation

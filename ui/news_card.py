@@ -14,12 +14,11 @@ class NewsCard(QFrame):
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #262626, stop:1 #1e1e1e);
                 border-radius: 16px;
-                border: 1px solid #333;
+                border: none;
             }
             QFrame:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #2d2d2d, stop:1 #252525);
-                border: 1px solid #444;
             }
         """)
         
@@ -31,7 +30,7 @@ class NewsCard(QFrame):
         
         # Title
         title_label = QLabel(title)
-        title_label.setStyleSheet("font-size: 17px; font-weight: bold; color: white; line-height: 1.4;")
+        title_label.setStyleSheet("font-size: 17px; font-weight: bold; color: white; line-height: 1.4; background: none;")
         title_label.setWordWrap(True)
         
         # Source and date
@@ -39,10 +38,10 @@ class NewsCard(QFrame):
         meta_layout.setSpacing(15)
         
         source_label = QLabel(f"📌 {source}")
-        source_label.setStyleSheet("font-size: 13px; color: #999;")
+        source_label.setStyleSheet("font-size: 13px; color: #999; background: none;")
         
         date_label = QLabel(published.split(',')[0] if ',' in published else published[:20])
-        date_label.setStyleSheet("font-size: 13px; color: #777;")
+        date_label.setStyleSheet("font-size: 13px; color: #777; background: none;")
         
         meta_layout.addWidget(source_label)
         meta_layout.addStretch()
@@ -51,12 +50,12 @@ class NewsCard(QFrame):
         # Summary (truncated)
         summary_text = summary[:180] + "..." if len(summary) > 180 else summary
         summary_label = QLabel(summary_text)
-        summary_label.setStyleSheet("font-size: 14px; color: #bbb; line-height: 1.5;")
+        summary_label.setStyleSheet("font-size: 14px; color: #bbb; line-height: 1.5; background: none;")
         summary_label.setWordWrap(True)
         
         # Read more link
         read_more = QLabel("Read full article →")
-        read_more.setStyleSheet("font-size: 14px; color: #5ba3ff; font-weight: 600; margin-top: 5px;")
+        read_more.setStyleSheet("font-size: 14px; color: #5ba3ff; font-weight: 600; margin-top: 5px; background: none;")
         
         layout.addWidget(title_label)
         layout.addLayout(meta_layout)
