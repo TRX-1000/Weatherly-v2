@@ -9,6 +9,66 @@ class NewsWorker(QThread):
     """Background thread for fetching news"""
     finished = pyqtSignal(list)
     error = pyqtSignal(str)
+
+    def is_weather_article(self, title, summary):
+        """Return True only if the article is genuinely weather-related."""
+
+        text = f"{title} {summary}".lower()
+
+        # Strong weather keywords (must contain at least one)
+        must_have = [
+            "weather", "forecast", "temperature", "rainfall",
+            "storm", "cyclone", "hurricane", "tornado",
+            "heatwave", "cold wave", "imd", "met office",
+            "snowfall", "thunderstorm", "rain alert"
+        ]
+
+        if not any(word in text for word in must_have):
+            return False
+
+        # Blocklist for irrelevant content
+        blocklist = [
+            "book", "novel", "review", "movie", "show",
+            "series", "trailer", "podcast", "author",
+            "set in", "mystery", "crime", "celebrity",
+            "music", "sports", "match", "fashion"
+        ]
+
+        if any(word in text for word in blocklist):
+            return False
+
+        return True
+    
+    def time_ago(self, dt):
+        """Convert datetime to 'time-ago' text."""
+        if not dt:
+            return "Unknown"
+
+        now = datetime.now()
+        diff = now - dt
+
+        seconds = diff.total_seconds()
+        days = diff.days
+
+        if seconds < 60:
+            return "Just now"
+        elif seconds < 3600:
+            minutes = int(seconds // 60)
+            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+        elif seconds < 86400:
+            hours = int(seconds // 3600)
+            return f"{hours} hour{'s' if hours != 1 else ''} ago"
+        elif days == 1:
+            return "Yesterday"
+        elif days < 7:
+            return f"{days} days ago"
+        elif days < 30:
+            weeks = days // 7
+            return f"{weeks} week{'s' if weeks != 1 else ''} ago"
+        else:
+            return dt.strftime("%b %d, %Y")
+
+
     
     def __init__(self, city):
         super().__init__()
@@ -74,29 +134,32 @@ class NewsWorker(QThread):
                 # Clean all text fields of HTML
                 title = self.strip_html(entry.title)
                 source = entry.get("source", {}).get("title", "Unknown")
-                published = entry.get("published", "N/A")
                 summary = self.strip_html(entry.get("summary", ""))
                 link = entry.link
+
+                # Check if genuinely weather-related
+                if not self.is_weather_article(title, summary):
+                    continue
                 
                 news_items.append({
                     "title": title,
                     "source": source,
-                    "published": published,
+                    "published": published_date.strftime("%b %d, %Y") if published_date else "Unknown",
+                    "published_relative": self.time_ago(published_date),
                     "summary": summary,
                     "link": link,
                     "date": published_date
                 })
+
                 
                 # Stop once we have 5 recent items
-                if len(news_items) >= 5:
+                if len(news_items) >= 10:
                     break
             
             # Sort by date (most recent first)
             news_items.sort(key=lambda x: x.get("date") or datetime.min, reverse=True)
             
-            # Remove the date field before sending (not needed in UI)
-            for item in news_items:
-                item.pop("date", None)
+            
             
             self.finished.emit(news_items)
         except Exception as e:

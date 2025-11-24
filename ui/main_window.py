@@ -44,7 +44,8 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Weatherly")
-        self.setMinimumSize(1200, 700)
+        self.setGeometry(80, 80, 1330, 775)
+        self.setMinimumSize(1330, 775)
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")

@@ -127,17 +127,3 @@ class WeatherAPI:
             "country": forecast_data["country"],
             "daily": summaries
         }
-
-
-# Example Usage
-if __name__ == "__main__":
-    api = WeatherAPI("your_api_key_here")
-
-    current = api.get_current_weather("London")
-    print(current)
-
-    forecast = api.get_5day_forecast("London")
-    print(forecast)
-
-    summary = api.get_daily_summary("London")
-    print(summary)
