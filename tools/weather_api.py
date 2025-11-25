@@ -43,6 +43,7 @@ class WeatherAPI:
             "description": w["description"],
             "main": w["main"],
             "icon": w["icon"],
+            "id": w["id"],  # Added weather condition ID
             "wind_speed": data["wind"]["speed"],
             "wind_deg": data["wind"].get("deg", 0),
             "clouds": data["clouds"]["all"],
@@ -84,6 +85,7 @@ class WeatherAPI:
                 "description": w["description"],
                 "main": w["main"],
                 "icon": w["icon"],
+                "id": w["id"],  # Added weather condition ID
                 "wind_speed": item["wind"]["speed"],
                 "wind_deg": item["wind"].get("deg", 0),
                 "clouds": item["clouds"]["all"],
@@ -118,6 +120,7 @@ class WeatherAPI:
                 "temp_avg": sum(temps) / len(temps),
                 "description": mid["description"],
                 "icon": mid["icon"],
+                "id": mid["id"],  # Added weather condition ID
                 "humidity": sum(b["humidity"] for b in blocks) / len(blocks),
                 "wind_speed": sum(b["wind_speed"] for b in blocks) / len(blocks),
             })

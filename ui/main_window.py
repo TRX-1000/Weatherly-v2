@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QPixmap
 
 from ui.sidebar_card import WeatherCard
 from ui.news_card import NewsCard
@@ -44,8 +44,7 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Weatherly")
-        self.setGeometry(80, 80, 1330, 775)
-        self.setMinimumSize(1330, 775)
+        self.setMinimumSize(1200, 700)
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
@@ -69,7 +68,7 @@ class MainWindow(QWidget):
 
         # ---------------- SIDEBAR ----------------
         self.sidebar = QFrame()
-        self.sidebar.setStyleSheet("background-color: #1a1a1a; background:none;")
+        self.sidebar.setStyleSheet("background-color: #1a1a1a;")
         self.sidebar.setMinimumWidth(self.sidebar_expanded)
         self.sidebar.setMaximumWidth(self.sidebar_expanded)
 
@@ -79,7 +78,7 @@ class MainWindow(QWidget):
 
         # Sidebar header with menu button
         sidebar_header = QFrame()
-        sidebar_header.setStyleSheet("background-color: #1a1a1a; background: none;")
+        sidebar_header.setStyleSheet("background-color: #1a1a1a;")
         header_layout = QHBoxLayout(sidebar_header)
         header_layout.setContentsMargins(15, 15, 15, 10)
         header_layout.setSpacing(10)
@@ -171,6 +170,12 @@ class MainWindow(QWidget):
         # ---------------- RIGHT PANEL ----------------
         self.right = QFrame()
         self.right.setStyleSheet("background-color: #111;")
+        
+        # Background label for weather images
+        self.background_label = QLabel(self.right)
+        self.background_label.setScaledContents(False)
+        self.background_label.setAlignment(Qt.AlignCenter)
+        self.background_label.lower()  # Send to back
 
         right_layout = QVBoxLayout(self.right)
         right_layout.setContentsMargins(20, 20, 20, 20)
@@ -311,7 +316,9 @@ class MainWindow(QWidget):
         self.current_section = QFrame()
         self.current_section.setStyleSheet("""
             QFrame {
+                background: rgba(30, 30, 30, 0.75);
                 border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
         """)
         
@@ -320,25 +327,25 @@ class MainWindow(QWidget):
         current_layout.setSpacing(15)
 
         self.city_label = QLabel("Select a city to view weather")
-        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; background: none;")
+        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white;")
         
         self.temp_label = QLabel("--°C")
-        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white; background: none;")
+        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white;")
         
         self.description_label = QLabel("--")
-        self.description_label.setStyleSheet("font-size: 22px; color: #ccc; background: none;")
+        self.description_label.setStyleSheet("font-size: 22px; color: #fff;")
         
         details_layout = QHBoxLayout()
         details_layout.setSpacing(40)
         
         self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
+        self.feels_like_label.setStyleSheet("font-size: 17px; color: #eee;")
         
         self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
+        self.humidity_label.setStyleSheet("font-size: 17px; color: #eee;")
         
         self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 17px; color: #aaa; background: none;")
+        self.wind_label.setStyleSheet("font-size: 17px; color: #eee;")
         
         details_layout.addWidget(self.feels_like_label)
         details_layout.addWidget(self.humidity_label)
@@ -360,7 +367,6 @@ class MainWindow(QWidget):
             font-weight: bold; 
             color: white;
             padding-left: 5px;
-            background: none;
         """)
         self.content_layout.addWidget(forecast_header)
         
@@ -384,7 +390,13 @@ class MainWindow(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
+                background: rgba(30, 30, 30, 0.7);
                 border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            QFrame:hover {
+                background: rgba(40, 40, 40, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.15);
             }
         """)
         card.setFixedSize(190, 220)
@@ -395,19 +407,19 @@ class MainWindow(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         
         day_label = QLabel("--")
-        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white; background: none;")
+        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white;")
         day_label.setAlignment(Qt.AlignCenter)
         
         icon_label = QLabel("🌤️")
-        icon_label.setStyleSheet("font-size: 52px; background: none;")
+        icon_label.setStyleSheet("font-size: 52px;")
         icon_label.setAlignment(Qt.AlignCenter)
         
         temp_label = QLabel("--°")
-        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white; background: none;")
+        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white;")
         temp_label.setAlignment(Qt.AlignCenter)
         
         desc_label = QLabel("--")
-        desc_label.setStyleSheet("font-size: 14px; color: #aaa; background: none;")
+        desc_label.setStyleSheet("font-size: 14px; color: #eee;")
         desc_label.setAlignment(Qt.AlignCenter)
         desc_label.setWordWrap(True)
         
@@ -706,6 +718,110 @@ class MainWindow(QWidget):
         self.feels_like_label.setText(f"Feels like: {int(data['feels_like'])}°C")
         self.humidity_label.setText(f"Humidity: {data['humidity']}%")
         self.wind_label.setText(f"Wind: {data['wind_speed']:.1f} m/s")
+        
+        # Update background based on weather using weather ID
+        weather_id = data.get('id', 800)  # Default to clear
+        self.update_background(weather_id)
+    
+    def update_background(self, weather_id):
+        """Update background image based on OpenWeatherMap weather ID"""
+        # Map OpenWeatherMap weather IDs to background images
+        # Reference: https://openweathermap.org/weather-conditions
+        
+        # Determine which image to use based on weather ID ranges
+        if 200 <= weather_id < 300:
+            # Thunderstorm (200-232)
+            image_name = 'serious_weather.jpg'
+        elif 300 <= weather_id < 400:
+            # Drizzle (300-321)
+            image_name = 'rain.jpg'
+        elif 500 <= weather_id < 600:
+            # Light to moderate rain (500-504)
+            image_name = 'heavy_rain.jpg'
+        elif 600 <= weather_id < 700:
+            # Snow (600-622)
+            image_name = 'snow.jpg'
+        elif weather_id == 701 or weather_id == 741:
+            # Mist, Fog (701, 741)
+            image_name = 'fog.jpg'
+        elif weather_id == 731:
+            # Dust (731)
+            image_name = 'dust.jpg'
+        elif weather_id == 751:
+            # Sand (751)
+            image_name = 'sandstorm.jpg'
+        elif weather_id == 761:
+            # Dust (761)
+            image_name = 'dust.jpg'
+        elif weather_id == 762:
+            # Ash (762)
+            image_name = 'volcano.jpg'
+        elif weather_id == 771:
+            # Squall (771)
+            image_name = 'squall.jpg'
+        elif weather_id == 781:
+            # Tornado (781)
+            image_name = 'serious.jpg'
+        elif weather_id == 800:
+            # Clear sky (800)
+            image_name = 'sunny.jpg'
+        elif weather_id == 801:
+            # Few clouds (801)
+            image_name = 'broken_clouds.jpg'
+        elif weather_id == 802:
+            # Scattered clouds (802)
+            image_name = 'broken_clouds.jpg'
+        elif weather_id == 803:
+            # Broken clouds (803)
+            image_name = 'broken_clouds.jpg'
+        elif weather_id == 804:
+            # Overcast clouds (804)
+            image_name = 'overcast.jpg'
+        else:
+            # Fallback
+            image_name = 'sunny.jpg'
+        
+        image_path = f'assets/{image_name}'
+        
+        # Check if file exists
+        if not os.path.exists(image_path):
+            # If image doesn't exist, use dark background
+            self.right.setStyleSheet("background-color: #111;")
+            return
+        
+        # Load the image
+        pixmap = QPixmap(image_path)
+        
+        if pixmap.isNull():
+            # If image failed to load, use dark background
+            self.right.setStyleSheet("background-color: #111;")
+            return
+        
+        # Scale pixmap to fit the right panel while maintaining aspect ratio
+        scaled_pixmap = pixmap.scaled(
+            self.right.size(),
+            Qt.KeepAspectRatioByExpanding,
+            Qt.SmoothTransformation
+        )
+        
+        # Set the background image
+        self.background_label.setPixmap(scaled_pixmap)
+        self.background_label.setGeometry(0, 0, self.right.width(), self.right.height())
+    
+    def resizeEvent(self, event):
+        """Handle window resize to update background"""
+        super().resizeEvent(event)
+        
+        # Update background label size
+        if hasattr(self, 'background_label'):
+            self.background_label.setGeometry(0, 0, self.right.width(), self.right.height())
+            
+            # Re-scale the background image if it exists
+            if self.background_label.pixmap() and not self.background_label.pixmap().isNull():
+                # Store the original path to reload
+                if hasattr(self, 'current_city') and self.current_city:
+                    # Re-apply the current background
+                    pass  # The geometry update handles it
 
     def update_forecast(self, data):
         """Update 5-day forecast display"""
