@@ -2,7 +2,7 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction
+    QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction, QGraphicsBlurEffect
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
 from PyQt5.QtGui import QCursor, QPixmap
@@ -44,7 +44,8 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Weatherly")
-        self.setMinimumSize(1200, 700)
+        self.setMinimumSize(1340, 775)
+        self.setGeometry(100, 100, 1340, 775)
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
@@ -176,10 +177,26 @@ class MainWindow(QWidget):
         self.background_label.setScaledContents(False)
         self.background_label.setAlignment(Qt.AlignCenter)
         self.background_label.lower()  # Send to back
+        
+        # Add blur effect to background
+        self.blur_effect = QGraphicsBlurEffect()
+        self.blur_effect.setBlurRadius(15)  # Adjust blur intensity
+        self.background_label.setGraphicsEffect(self.blur_effect)
+        
+        # Dimming overlay on top of background
+        self.dim_overlay = QLabel(self.right)
+        self.dim_overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")  # 30% black overlay
+        self.dim_overlay.setGeometry(0, 0, 1920, 1080)  # Set initial large size
+        self.dim_overlay.lower()  # Above background but below content
 
         right_layout = QVBoxLayout(self.right)
         right_layout.setContentsMargins(20, 20, 20, 20)
         right_layout.setSpacing(15)
+        
+        # Raise the layout widget to be on top of the dim overlay
+        if hasattr(self, 'dim_overlay'):
+            self.dim_overlay.lower()
+            self.background_label.lower()
 
         # Top Bar - Container for centering
         top_bar_container = QHBoxLayout()
@@ -273,6 +290,14 @@ class MainWindow(QWidget):
         # Add sidebar + main
         self.root.addWidget(self.sidebar)
         self.root.addWidget(self.right)
+        
+        # Ensure proper z-ordering: background at bottom, dim overlay above it, content on top
+        if hasattr(self, 'background_label'):
+            self.background_label.lower()
+        if hasattr(self, 'dim_overlay'):
+            self.dim_overlay.lower()
+            self.dim_overlay.raise_()  # Raise above background
+            self.background_label.lower()  # But keep background at very bottom
 
         # Animations
         self.sidebar_anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
@@ -316,9 +341,8 @@ class MainWindow(QWidget):
         self.current_section = QFrame()
         self.current_section.setStyleSheet("""
             QFrame {
-                background: rgba(30, 30, 30, 0.75);
+                background: none;
                 border-radius: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
             }
         """)
         
@@ -327,25 +351,25 @@ class MainWindow(QWidget):
         current_layout.setSpacing(15)
 
         self.city_label = QLabel("Select a city to view weather")
-        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white;")
+        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; background: none;")
         
         self.temp_label = QLabel("--°C")
-        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white;")
+        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white; background: none;")
         
         self.description_label = QLabel("--")
-        self.description_label.setStyleSheet("font-size: 22px; color: #fff;")
+        self.description_label.setStyleSheet("font-size: 22px; color: #fff; background: none;")
         
         details_layout = QHBoxLayout()
         details_layout.setSpacing(40)
         
         self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 17px; color: #eee;")
+        self.feels_like_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
         
         self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 17px; color: #eee;")
+        self.humidity_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
         
         self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 17px; color: #eee;")
+        self.wind_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
         
         details_layout.addWidget(self.feels_like_label)
         details_layout.addWidget(self.humidity_label)
@@ -390,13 +414,8 @@ class MainWindow(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
-                background: rgba(30, 30, 30, 0.7);
+                background: none;
                 border-radius: 16px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            QFrame:hover {
-                background: rgba(40, 40, 40, 0.8);
-                border: 1px solid rgba(255, 255, 255, 0.15);
             }
         """)
         card.setFixedSize(190, 220)
@@ -407,19 +426,19 @@ class MainWindow(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         
         day_label = QLabel("--")
-        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white;")
+        day_label.setStyleSheet("font-size: 19px; font-weight: bold; color: white; background: none;")
         day_label.setAlignment(Qt.AlignCenter)
         
         icon_label = QLabel("🌤️")
-        icon_label.setStyleSheet("font-size: 52px;")
+        icon_label.setStyleSheet("font-size: 52px; background: none;")
         icon_label.setAlignment(Qt.AlignCenter)
         
         temp_label = QLabel("--°")
-        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white;")
+        temp_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white; background: none;")
         temp_label.setAlignment(Qt.AlignCenter)
         
         desc_label = QLabel("--")
-        desc_label.setStyleSheet("font-size: 14px; color: #eee;")
+        desc_label.setStyleSheet("font-size: 14px; color: #ffffff; background: none;")
         desc_label.setAlignment(Qt.AlignCenter)
         desc_label.setWordWrap(True)
         
@@ -441,6 +460,7 @@ class MainWindow(QWidget):
         news_header.setStyleSheet("""
             font-size: 26px; 
             font-weight: bold; 
+            background: none;
             color: white;
             padding-left: 5px;
             margin-top: 10px;
@@ -651,7 +671,7 @@ class MainWindow(QWidget):
         loading_label.setStyleSheet("""
             font-size: 15px; 
             color: #888;
-            background: #1e1e1e;
+            background: none;
             border-radius: 12px;
             padding: 20px;
         """)
@@ -678,7 +698,7 @@ class MainWindow(QWidget):
             no_news_label.setStyleSheet("""
                 font-size: 15px; 
                 color: #888;
-                background: #1e1e1e;
+                background: none;
                 border-radius: 12px;
                 padding: 25px;
             """)
@@ -703,7 +723,7 @@ class MainWindow(QWidget):
         error_label.setStyleSheet("""
             font-size: 15px; 
             color: #ff6b6b;
-            background: #2a1a1a;
+            background: none;
             border-radius: 12px;
             padding: 20px;
         """)
@@ -731,37 +751,34 @@ class MainWindow(QWidget):
         # Determine which image to use based on weather ID ranges
         if 200 <= weather_id < 300:
             # Thunderstorm (200-232)
-            image_name = 'serious_weather.jpg'
+            image_name = 'thunderstorm.jpg'
         elif 300 <= weather_id < 400:
             # Drizzle (300-321)
             image_name = 'rain.jpg'
-        elif 500 <= weather_id < 600:
+        elif 500 <= weather_id < 505:
             # Light to moderate rain (500-504)
+            image_name = 'rain.jpg'
+        elif 505 <= weather_id < 600:
+            # Heavy rain and extreme rain (505-531)
             image_name = 'heavy_rain.jpg'
         elif 600 <= weather_id < 700:
             # Snow (600-622)
             image_name = 'snow.jpg'
-        elif weather_id == 701 or weather_id == 741:
-            # Mist, Fog (701, 741)
+        elif 701 <= weather_id <= 711:
+            # Mist, Smoke (701-711)
             image_name = 'fog.jpg'
-        elif weather_id == 731:
-            # Dust (731)
+        elif 721 <= weather_id <= 741:
+            # Haze, Fog (721-741)
+            image_name = 'fog.jpg'
+        elif 751 <= weather_id <= 762:
+            # Sand, Dust, Ash (751-762)
             image_name = 'dust.jpg'
-        elif weather_id == 751:
-            # Sand (751)
-            image_name = 'sandstorm.jpg'
-        elif weather_id == 761:
-            # Dust (761)
-            image_name = 'dust.jpg'
-        elif weather_id == 762:
-            # Ash (762)
-            image_name = 'volcano.jpg'
         elif weather_id == 771:
-            # Squall (771)
+            # Squall
             image_name = 'squall.jpg'
         elif weather_id == 781:
-            # Tornado (781)
-            image_name = 'serious.jpg'
+            # Tornado
+            image_name = 'serious_weather.jpg'
         elif weather_id == 800:
             # Clear sky (800)
             image_name = 'sunny.jpg'
@@ -807,6 +824,15 @@ class MainWindow(QWidget):
         # Set the background image
         self.background_label.setPixmap(scaled_pixmap)
         self.background_label.setGeometry(0, 0, self.right.width(), self.right.height())
+        
+        # Update dim overlay to cover entire right panel
+        if hasattr(self, 'dim_overlay'):
+            self.dim_overlay.setGeometry(0, 0, self.right.width(), self.right.height())
+            self.background_label.stackUnder(self.dim_overlay)  # Background under dim overlay
+            
+            # Make sure all content widgets are above the overlay
+            if hasattr(self, 'scroll_area'):
+                self.scroll_area.raise_()
     
     def resizeEvent(self, event):
         """Handle window resize to update background"""
