@@ -185,7 +185,7 @@ class MainWindow(QWidget):
         
         # Dimming overlay on top of background
         self.dim_overlay = QLabel(self.right)
-        self.dim_overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")  # 30% black overlay
+        self.dim_overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.3);")  # 30% black overlay
         self.dim_overlay.setGeometry(0, 0, 1920, 1080)  # Set initial large size
         self.dim_overlay.lower()  # Above background but below content
 
@@ -299,10 +299,15 @@ class MainWindow(QWidget):
             self.dim_overlay.raise_()  # Raise above background
             self.background_label.lower()  # But keep background at very bottom
 
+        self.floating_menu_button.raise_()
+        self.refresh_button.raise_()
+        self.scroll_area.raise_()
+
         # Animations
         self.sidebar_anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
         self.sidebar_anim.setDuration(250)
         self.sidebar_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self.sidebar_anim.valueChanged.connect(self.update_background_geometry)
         
         self.sidebar_max_anim = QPropertyAnimation(self.sidebar, b"maximumWidth")
         self.sidebar_max_anim.setDuration(250)
@@ -833,21 +838,25 @@ class MainWindow(QWidget):
             # Make sure all content widgets are above the overlay
             if hasattr(self, 'scroll_area'):
                 self.scroll_area.raise_()
+
+    def update_background_geometry(self):
+        """Update background and overlay geometry during sidebar animation"""
+        if hasattr(self, 'background_label') and self.background_label.pixmap():
+            scaled_pixmap = self.background_label.pixmap().scaled(
+                self.right.size(),
+                Qt.KeepAspectRatioByExpanding,
+                Qt.SmoothTransformation
+            )
+            self.background_label.setPixmap(scaled_pixmap)
+            self.background_label.setGeometry(0, 0, self.right.width(), self.right.height())
+        
+        if hasattr(self, 'dim_overlay'):
+            self.dim_overlay.setGeometry(0, 0, self.right.width(), self.right.height())
     
     def resizeEvent(self, event):
         """Handle window resize to update background"""
         super().resizeEvent(event)
-        
-        # Update background label size
-        if hasattr(self, 'background_label'):
-            self.background_label.setGeometry(0, 0, self.right.width(), self.right.height())
-            
-            # Re-scale the background image if it exists
-            if self.background_label.pixmap() and not self.background_label.pixmap().isNull():
-                # Store the original path to reload
-                if hasattr(self, 'current_city') and self.current_city:
-                    # Re-apply the current background
-                    pass  # The geometry update handles it
+        self.update_background_geometry()
 
     def update_forecast(self, data):
         """Update 5-day forecast display"""
