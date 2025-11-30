@@ -25,12 +25,13 @@ class NewsCard(QFrame):
         self.setCursor(QCursor(Qt.PointingHandCursor))
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(25, 20, 25, 20)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 15, 20, 15)
+        layout.setSpacing(8)
         
         # Title
         title_label = QLabel(title)
         title_label.setStyleSheet("font-size: 17px; font-weight: bold; color: white; line-height: 1.4; background: none;")
+        title_label.setMaximumWidth(1000)
         title_label.setWordWrap(True)
         
         # Source and date
@@ -48,9 +49,10 @@ class NewsCard(QFrame):
         meta_layout.addWidget(date_label)
         
         # Summary (truncated)
-        summary_text = summary[:180] + "..." if len(summary) > 180 else summary
+        summary_text = summary[:150] + "..." if len(summary) > 150 else summary
         summary_label = QLabel(summary_text)
         summary_label.setStyleSheet("font-size: 14px; color: #bbb; line-height: 1.5; background: none;")
+        summary_label.setMaximumWidth(1000)
         summary_label.setWordWrap(True)
         
         # Read more link

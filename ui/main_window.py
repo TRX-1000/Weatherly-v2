@@ -44,8 +44,8 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Weatherly")
-        self.setMinimumSize(1340, 775)
-        self.setGeometry(100, 100, 1340, 775)
+        self.setMinimumSize(1100, 600)
+        self.setGeometry(100, 100, 1100, 600)
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
@@ -719,6 +719,8 @@ class MainWindow(QWidget):
                 item["summary"],
                 item["link"]
             )
+
+            news_card.setMaximumWidth(755)
             self.news_layout.addWidget(news_card)
 
     def show_news_error(self, error_msg):
