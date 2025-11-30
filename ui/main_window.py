@@ -803,7 +803,7 @@ class MainWindow(QWidget):
             # Fallback
             image_name = 'sunny.jpg'
         
-        image_path = f'assets/{image_name}'
+        image_path = f'assets/background/{image_name}'
         
         # Check if file exists
         if not os.path.exists(image_path):
@@ -869,26 +869,35 @@ class MainWindow(QWidget):
                 avg_temp = int(day_data['temp_avg'])
                 card.temp_label.setText(f"{avg_temp}°C")
                 card.desc_label.setText(day_data['description'].title())
-                icon = self.get_weather_emoji(day_data['description'])
-                card.icon_label.setText(icon)
+                
+                # Load icon image
+                icon_path = self.get_weather_icon_path(day_data['description'])
+                if os.path.exists(icon_path):
+                    pixmap = QPixmap(icon_path)
+                    card.icon_label.setPixmap(pixmap)
+                else:
+                    # Fallback if image doesn't exist
+                    card.icon_label.setText("🌤️")
 
-    def get_weather_emoji(self, description):
-        """Map weather description to emoji"""
+    def get_weather_icon_path(self, description):
+        """Map weather description to icon file path"""
         desc_lower = description.lower()
         if 'clear' in desc_lower:
-            return '☀️'
+            return 'assets/icons/sun.png'
+        elif 'few clouds' in desc_lower or 'scattered' in desc_lower:
+            return 'assets/icons/cloudy-day.png'
         elif 'cloud' in desc_lower:
-            return '☁️'
+            return 'assets/icons/cloud.png'
         elif 'rain' in desc_lower or 'drizzle' in desc_lower:
-            return '🌧️'
+            return 'assets/icons/raindrops.png'
         elif 'thunder' in desc_lower or 'storm' in desc_lower:
-            return '⛈️'
+            return 'assets/icons/storm.png'
         elif 'snow' in desc_lower:
-            return '❄️'
+            return 'assets/icons/snowflake.png'
         elif 'mist' in desc_lower or 'fog' in desc_lower:
-            return '🌫️'
+            return 'assets/icons/fog.png'  # Reusing cloud icon for fog
         else:
-            return '🌤️'
+            return 'assets/icons/cloudy-day.png'
 
     def show_error(self, error_msg):
         """Display error message"""
