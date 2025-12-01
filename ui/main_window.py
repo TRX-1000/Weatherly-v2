@@ -9,6 +9,8 @@ from PyQt5.QtGui import QCursor, QPixmap
 
 from ui.sidebar_card import WeatherCard
 from ui.news_card import NewsCard
+from ui.settings_page import SettingsPage
+
 from tools.weather_api import WeatherAPI
 from tools.news_api import NewsAPI
 
@@ -58,6 +60,8 @@ class MainWindow(QWidget):
         # Load saved cities from file
         self.cities_file = "saved_cities.json"
         self.load_cities_from_file()
+        self.settings_file = "settings.json"
+        self.settings = self.load_settings()
 
         self.sidebar_collapsed = 0
         self.sidebar_expanded = 280
@@ -237,8 +241,23 @@ class MainWindow(QWidget):
         """)
         self.refresh_button.clicked.connect(self.refresh_weather)
 
+        self.settings_button = QPushButton("⚙️")
+        self.settings_button.setFixedSize(45, 45)
+        self.settings_button.setStyleSheet("""
+            QPushButton {
+                background: #262626;
+                border-radius: 10px;
+                color: white;
+                font-size: 22px;
+            }
+            QPushButton:hover { background: #333; }""")
+        
+        self.settings_button.clicked.connect(self.open_settings)
+
+
         top_bar_container.addWidget(self.floating_menu_button)
         top_bar_container.addWidget(center_spacer)
+        top_bar_container.addWidget(self.settings_button)
         top_bar_container.addWidget(self.refresh_button)
 
         right_layout.addLayout(top_bar_container)
@@ -287,6 +306,15 @@ class MainWindow(QWidget):
         self.scroll_area.setWidget(scroll_content)
         right_layout.addWidget(self.scroll_area)
 
+        # Create settings page (hidden by default)
+        self.settings_page = SettingsPage(self.right, self.settings)
+        self.settings_page.settings_changed.connect(self.apply_settings)
+        self.settings_page.back_clicked.connect(self.show_weather_content)
+        self.settings_page.hide()
+
+        # Add to right panel layout
+        right_layout.addWidget(self.settings_page)
+
         # Add sidebar + main
         self.root.addWidget(self.sidebar)
         self.root.addWidget(self.right)
@@ -300,6 +328,7 @@ class MainWindow(QWidget):
             self.background_label.lower()  # But keep background at very bottom
 
         self.floating_menu_button.raise_()
+        self.settings_button.raise_()
         self.refresh_button.raise_()
         self.scroll_area.raise_()
 
@@ -565,10 +594,10 @@ class MainWindow(QWidget):
         """Update a sidebar city card with fetched data"""
         if city in self.city_cards:
             card = self.city_cards[city]
-            temp = f"{int(data['temperature'])}°"
+            temp = self.format_temperature(data['temperature'])
             condition = data['description'].title()
-            hi = f"{int(data['temp_max'])}°"
-            lo = f"{int(data['temp_min'])}°"
+            hi = self.format_temperature(data['temp_max'])
+            lo = self.format_temperature(data['temp_min'])
             card.update_weather(temp, condition, hi, lo)
 
     def load_city_weather(self, city):
@@ -666,6 +695,78 @@ class MainWindow(QWidget):
             import traceback
             traceback.print_exc()
 
+    # ---------------- Settings Management ----------------
+    def load_settings(self):
+        """Load settings from JSON file"""
+        if os.path.exists(self.settings_file):
+            try:
+                with open(self.settings_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error loading settings: {e}")
+        
+        # Default settings
+        return {
+            "temperature_unit": "celsius",
+            "wind_unit": "metric",
+            "auto_refresh": True
+        }
+
+    def save_settings_to_file(self):
+        """Save settings to JSON file"""
+        try:
+            with open(self.settings_file, 'w') as f:
+                json.dump(self.settings, f, indent=2)
+        except Exception as e:
+            print(f"Error saving settings: {e}")
+
+    def open_settings(self):
+        """Show settings page"""
+        self.scroll_area.hide()
+        self.settings_page.show()
+        self.settings_button.hide()
+        self.refresh_button.hide()
+
+    def show_weather_content(self):
+        """Show weather content and hide settings"""
+        self.settings_page.hide()
+        self.scroll_area.show()
+        self.settings_button.show()
+        self.refresh_button.show()
+
+    def apply_settings(self, new_settings):
+        """Apply new settings"""
+        self.settings = new_settings
+        self.save_settings_to_file()
+        
+        # Refresh weather with new units if a city is loaded
+        if self.current_city:
+            self.refresh_weather()
+
+    def convert_temperature(self, temp_celsius):
+        """Convert temperature based on settings"""
+        if self.settings.get("temperature_unit") == "fahrenheit":
+            return (temp_celsius * 9/5) + 32
+        return temp_celsius
+
+    def format_temperature(self, temp_celsius):
+        """Format temperature with correct unit"""
+        converted = self.convert_temperature(temp_celsius)
+        unit = "°F" if self.settings.get("temperature_unit") == "fahrenheit" else "°C"
+        return f"{int(converted)}{unit}"
+
+    def convert_wind_speed(self, speed_ms):
+        """Convert wind speed based on settings"""
+        if self.settings.get("wind_unit") == "imperial":
+            return speed_ms * 2.237  # Convert m/s to mph
+        return speed_ms
+
+    def format_wind_speed(self, speed_ms):
+        """Format wind speed with correct unit"""
+        converted = self.convert_wind_speed(speed_ms)
+        unit = "mph" if self.settings.get("wind_unit") == "imperial" else "m/s"
+        return f"{converted:.1f} {unit}"
+
     def fetch_news(self, city):
         """Fetch weather news for the city"""
         # Clear existing news
@@ -740,14 +841,14 @@ class MainWindow(QWidget):
     def update_current_weather(self, data):
         """Update current weather display"""
         self.city_label.setText(f"{data['city']}, {data['country']}")
-        self.temp_label.setText(f"{int(data['temperature'])}°C")
+        self.temp_label.setText(self.format_temperature(data['temperature']))
         self.description_label.setText(data['description'].title())
-        self.feels_like_label.setText(f"Feels like: {int(data['feels_like'])}°C")
+        self.feels_like_label.setText(f"Feels like: {self.format_temperature(data['feels_like'])}")
         self.humidity_label.setText(f"Humidity: {data['humidity']}%")
-        self.wind_label.setText(f"Wind: {data['wind_speed']:.1f} m/s")
+        self.wind_label.setText(f"Wind: {self.format_wind_speed(data['wind_speed'])}")
         
         # Update background based on weather using weather ID
-        weather_id = data.get('id', 800)  # Default to clear
+        weather_id = data.get('id', 800)
         self.update_background(weather_id)
     
     def update_background(self, weather_id):
@@ -840,6 +941,9 @@ class MainWindow(QWidget):
             # Make sure all content widgets are above the overlay
             if hasattr(self, 'scroll_area'):
                 self.scroll_area.raise_()
+                self.settings_button.raise_()  
+                self.refresh_button.raise_() 
+                self.floating_menu_button.raise_() 
 
     def update_background_geometry(self):
         """Update background and overlay geometry during sidebar animation"""
@@ -868,9 +972,10 @@ class MainWindow(QWidget):
             if i < len(self.forecast_cards):
                 card = self.forecast_cards[i]
                 card.day_label.setText(day_data['day_name'][:3])
-                avg_temp = int(day_data['temp_avg'])
-                card.temp_label.setText(f"{avg_temp}°C")
+                card.temp_label.setText(self.format_temperature(day_data['temp_avg']))
                 card.desc_label.setText(day_data['description'].title())
+                icon = self.get_weather_emoji(day_data['description'])
+                card.icon_label.setText(icon)
                 
                 # Load icon image
                 icon_path = self.get_weather_icon_path(day_data['description'])
@@ -900,6 +1005,24 @@ class MainWindow(QWidget):
             return 'assets/icons/fog.png'  # Reusing cloud icon for fog
         else:
             return 'assets/icons/cloudy-day.png'
+        
+    def get_weather_emoji(self, description):
+        """Map weather description to emoji"""
+        desc_lower = description.lower()
+        if 'clear' in desc_lower:
+            return '☀️'
+        elif 'cloud' in desc_lower:
+            return '☁️'
+        elif 'rain' in desc_lower or 'drizzle' in desc_lower:
+            return '🌧️'
+        elif 'thunder' in desc_lower or 'storm' in desc_lower:
+            return '⛈️'
+        elif 'snow' in desc_lower:
+            return '❄️'
+        elif 'mist' in desc_lower or 'fog' in desc_lower:
+            return '🌫️'
+        else:
+            return '🌤️'
 
     def show_error(self, error_msg):
         """Display error message"""
