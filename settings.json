@@ -1,0 +1,5 @@
+{
+  "temperature_unit": "fahrenheit",
+  "wind_unit": "metric",
+  "auto_refresh": true
+}

@@ -20,40 +20,63 @@ class SettingsPage(QWidget):
             "auto_refresh": True
         }
         
-        self.setStyleSheet("background: transparent;")
+        self.setStyleSheet("background-color: #111;")
         
         # Main layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
-        # Top bar with back button
+        # Top bar with back button - Glassmorphic style
         top_bar = QFrame()
-        top_bar.setStyleSheet("background: transparent;")
-        top_bar.setFixedHeight(65)
+        top_bar.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #1a1a1a, stop:1 #1f1f1f);
+                border-bottom: 1px solid #2a2a2a;
+            }
+        """)
+        top_bar.setFixedHeight(80)
         
         top_layout = QHBoxLayout(top_bar)
-        top_layout.setContentsMargins(0, 0, 0, 15)
+        top_layout.setContentsMargins(30, 20, 30, 20)
         
         back_btn = QPushButton("← Back")
         back_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        back_btn.setFixedSize(100, 45)
+        back_btn.setFixedSize(120, 45)
         back_btn.setStyleSheet("""
             QPushButton {
-                background: #262626;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2d2d2d, stop:1 #262626);
                 color: white;
-                border: none;
-                border-radius: 10px;
+                border: 1px solid #3a3a3a;
+                border-radius: 12px;
                 font-size: 16px;
                 font-weight: 600;
+                padding: 0 20px;
             }
             QPushButton:hover {
-                background: #333;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #353535, stop:1 #2e2e2e);
+                border: 1px solid #444;
+            }
+            QPushButton:pressed {
+                background: #222;
             }
         """)
         back_btn.clicked.connect(self.on_back_clicked)
         
+        # Settings title in top bar
+        settings_title = QLabel("⚙️  Settings")
+        settings_title.setStyleSheet("""
+            font-size: 26px; 
+            font-weight: bold; 
+            color: white;
+            padding-left: 20px;
+        """)
+        
         top_layout.addWidget(back_btn)
+        top_layout.addWidget(settings_title)
         top_layout.addStretch()
         
         main_layout.addWidget(top_bar)
@@ -64,39 +87,52 @@ class SettingsPage(QWidget):
         scroll_area.setStyleSheet("""
             QScrollArea {
                 border: none;
-                background: transparent;
+                background-color: #111;
             }
             QScrollBar:vertical {
-                background: #111;
-                width: 10px;
-                border-radius: 5px;
+                background: #1a1a1a;
+                width: 12px;
+                border-radius: 6px;
+                margin: 2px;
             }
             QScrollBar::handle:vertical {
-                background: #333;
-                border-radius: 5px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #3a3a3a, stop:1 #444);
+                border-radius: 6px;
                 min-height: 30px;
             }
             QScrollBar::handle:vertical:hover {
-                background: #444;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #454545, stop:1 #4a4a4a);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
             }
         """)
         
         scroll_content = QWidget()
-        scroll_content.setStyleSheet("background: transparent;")
+        scroll_content.setStyleSheet("background-color: #111;")
         
         layout = QVBoxLayout(scroll_content)
-        layout.setContentsMargins(35, 20, 35, 35)
-        layout.setSpacing(30)
+        layout.setContentsMargins(50, 40, 50, 50)
+        layout.setSpacing(35)
         
-        # Title
-        title = QLabel("⚙️ Settings")
-        title.setStyleSheet("font-size: 36px; font-weight: bold; color: white; background: transparent;")
-        layout.addWidget(title)
+        # Preferences Section Header
+        prefs_header = QLabel("🎛️  Preferences")
+        prefs_header.setStyleSheet("""
+            font-size: 32px; 
+            font-weight: bold; 
+            color: white;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        """)
+        layout.addWidget(prefs_header)
         
         # Temperature Unit Section
         self.create_section(
             layout,
-            "🌡️ Temperature Unit",
+            "🌡️  Temperature Unit",
+            "Choose your preferred temperature scale",
             [("Celsius (°C)", "celsius"), ("Fahrenheit (°F)", "fahrenheit")],
             "temperature_unit"
         )
@@ -104,55 +140,114 @@ class SettingsPage(QWidget):
         # Wind Speed Unit Section
         self.create_section(
             layout,
-            "💨 Wind Speed Unit",
-            [("Meters/second (m/s)", "metric"), ("Miles/hour (mph)", "imperial")],
+            "💨  Wind Speed Unit",
+            "Choose your preferred wind speed measurement",
+            [("Meters per second (m/s)", "metric"), ("Miles per hour (mph)", "imperial")],
             "wind_unit"
         )
         
-        # Divider
-        divider = QFrame()
-        divider.setStyleSheet("background-color: #333; max-height: 1px;")
-        divider.setFrameShape(QFrame.HLine)
-        layout.addWidget(divider)
+        layout.addSpacing(20)
+        
+        # Decorative divider
+        divider_container = QFrame()
+        divider_container.setStyleSheet("background: transparent;")
+        divider_layout = QHBoxLayout(divider_container)
+        divider_layout.setContentsMargins(0, 20, 0, 20)
+        
+        left_line = QFrame()
+        left_line.setFrameShape(QFrame.HLine)
+        left_line.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 transparent, stop:1 #333); max-height: 1px;")
+        
+        divider_icon = QLabel("✦")
+        divider_icon.setStyleSheet("color: #555; font-size: 14px; padding: 0 15px;")
+        
+        right_line = QFrame()
+        right_line.setFrameShape(QFrame.HLine)
+        right_line.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #333, stop:1 transparent); max-height: 1px;")
+        
+        divider_layout.addWidget(left_line)
+        divider_layout.addWidget(divider_icon)
+        divider_layout.addWidget(right_line)
+        
+        layout.addWidget(divider_container)
         
         # About Section
-        about_label = QLabel("ℹ️ About")
-        about_label.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin-top: 10px; background: transparent;")
+        about_label = QLabel("ℹ️  About Weatherly")
+        about_label.setStyleSheet("""
+            font-size: 32px; 
+            font-weight: bold; 
+            color: white;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        """)
         layout.addWidget(about_label)
         
         about_frame = QFrame()
         about_frame.setStyleSheet("""
             QFrame {
-                background-color: rgba(38, 38, 38, 0.6);
-                border-radius: 16px;
-                padding: 25px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                border: 1px solid #2a2a2a;
+                border-radius: 20px;
+                padding: 30px;
             }
         """)
         about_layout = QVBoxLayout(about_frame)
-        about_layout.setSpacing(15)
+        about_layout.setSpacing(18)
         
         app_name = QLabel("Weatherly v2.0")
-        app_name.setStyleSheet("font-size: 22px; font-weight: bold; color: white; background: none;")
+        app_name.setStyleSheet("""
+            font-size: 28px; 
+            font-weight: bold; 
+            color: white; 
+            background: none;
+            letter-spacing: -0.5px;
+        """)
         
-        description = QLabel("A modern weather application with beautiful UI and smooth animations.")
-        description.setStyleSheet("font-size: 15px; color: #bbb; background: none; line-height: 1.5;")
+        description = QLabel("A modern weather application featuring a beautiful dark UI, smooth animations, and real-time weather updates from around the world.")
+        description.setStyleSheet("""
+            font-size: 15px; 
+            color: #bbb; 
+            background: none; 
+            line-height: 24px;
+        """)
         description.setWordWrap(True)
         
-        github_btn = QPushButton("🔗 View on GitHub")
+        # Features list
+        features_label = QLabel("✨ Features:")
+        features_label.setStyleSheet("font-size: 16px; font-weight: 600; color: #ddd; background: none; margin-top: 8px;")
+        
+        features = QLabel("• Real-time weather data\n• 5-day forecast\n• Weather news integration\n• Multiple city tracking\n• Customizable units")
+        features.setStyleSheet("""
+            font-size: 14px; 
+            color: #999; 
+            background: none;
+            line-height: 22px;
+            padding-left: 10px;
+        """)
+        
+        github_btn = QPushButton("🔗  View on GitHub")
         github_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        github_btn.setFixedHeight(50)
+        github_btn.setFixedHeight(55)
         github_btn.setStyleSheet("""
             QPushButton {
-                background-color: #333;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2d2d2d, stop:1 #262626);
                 color: white;
-                border: none;
-                border-radius: 10px;
+                border: 1px solid #3a3a3a;
+                border-radius: 14px;
                 padding: 12px 20px;
-                font-size: 15px;
+                font-size: 16px;
                 font-weight: 600;
             }
             QPushButton:hover {
-                background-color: #404040;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #353535, stop:1 #2e2e2e);
+                border: 1px solid #444;
+            }
+            QPushButton:pressed {
+                background: #222;
             }
         """)
         github_btn.clicked.connect(lambda: QDesktopServices.openUrl(
@@ -161,27 +256,36 @@ class SettingsPage(QWidget):
         
         about_layout.addWidget(app_name)
         about_layout.addWidget(description)
+        about_layout.addWidget(features_label)
+        about_layout.addWidget(features)
         about_layout.addWidget(github_btn)
         
         layout.addWidget(about_frame)
         
         layout.addStretch()
         
-        # Save button at bottom
-        save_btn = QPushButton("💾 Save Settings")
+        # Save button at bottom - Eye-catching gradient
+        save_btn = QPushButton("💾  Save Settings")
         save_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        save_btn.setFixedHeight(55)
+        save_btn.setFixedHeight(60)
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: #5ba3ff;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #4a8fff, stop:0.5 #5ba3ff, stop:1 #6db5ff);
                 color: white;
                 border: none;
-                border-radius: 12px;
-                font-size: 17px;
-                font-weight: 600;
+                border-radius: 16px;
+                font-size: 18px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
             }
             QPushButton:hover {
-                background-color: #4a92ee;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #5b9fff, stop:0.5 #6cb3ff, stop:1 #7dc5ff);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #3978ee, stop:0.5 #4a92ee, stop:1 #5ca4ee);
             }
         """)
         save_btn.clicked.connect(self.save_settings)
@@ -191,49 +295,95 @@ class SettingsPage(QWidget):
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
     
-    def create_section(self, parent_layout, title, options, setting_key):
+    def create_section(self, parent_layout, title, description, options, setting_key):
         """Create a settings section with radio buttons"""
-        section_label = QLabel(title)
-        section_label.setStyleSheet("font-size: 24px; font-weight: bold; color: white; background: transparent;")
-        parent_layout.addWidget(section_label)
+        section_container = QFrame()
+        section_container.setStyleSheet("background: transparent;")
         
+        container_layout = QVBoxLayout(section_container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(12)
+        
+        # Title
+        section_label = QLabel(title)
+        section_label.setStyleSheet("""
+            font-size: 22px; 
+            font-weight: 600; 
+            color: white;
+            letter-spacing: -0.3px;
+        """)
+        
+        # Description
+        desc_label = QLabel(description)
+        desc_label.setStyleSheet("""
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        """)
+        
+        container_layout.addWidget(section_label)
+        container_layout.addWidget(desc_label)
+        
+        # Options frame with gradient
         section_frame = QFrame()
         section_frame.setStyleSheet("""
             QFrame {
-                background-color: rgba(38, 38, 38, 0.6);
-                border-radius: 16px;
-                padding: 20px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                border: 1px solid #2a2a2a;
+                border-radius: 18px;
+                padding: 8px;
             }
         """)
         
         section_layout = QVBoxLayout(section_frame)
-        section_layout.setSpacing(15)
+        section_layout.setSpacing(8)
+        section_layout.setContentsMargins(8, 8, 8, 8)
         
         button_group = QButtonGroup(self)
         
-        for label, value in options:
+        for i, (label, value) in enumerate(options):
+            # Create option container for hover effect
+            option_container = QFrame()
+            option_container.setStyleSheet("""
+                QFrame {
+                    background: transparent;
+                    border-radius: 12px;
+                }
+                QFrame:hover {
+                    background: rgba(255, 255, 255, 0.03);
+                }
+            """)
+            
+            option_layout = QHBoxLayout(option_container)
+            option_layout.setContentsMargins(15, 12, 15, 12)
+            
             radio = QRadioButton(label)
             radio.setStyleSheet("""
                 QRadioButton {
                     color: white;
                     font-size: 16px;
                     background: transparent;
-                    spacing: 12px;
-                    padding: 10px;
+                    spacing: 15px;
+                    font-weight: 500;
                 }
                 QRadioButton::indicator {
-                    width: 22px;
-                    height: 22px;
-                    border-radius: 11px;
-                    border: 2px solid #666;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 12px;
+                    border: 2px solid #555;
                     background-color: #1a1a1a;
                 }
                 QRadioButton::indicator:checked {
-                    background-color: #5ba3ff;
+                    background: qradialgradient(cx:0.5, cy:0.5, radius:0.5,
+                        fx:0.5, fy:0.5, stop:0 #6db5ff, stop:0.6 #5ba3ff, stop:1 #4a8fff);
                     border-color: #5ba3ff;
                 }
                 QRadioButton::indicator:hover {
-                    border-color: #888;
+                    border-color: #777;
+                }
+                QRadioButton::indicator:checked:hover {
+                    border-color: #6db5ff;
                 }
             """)
             
@@ -244,9 +394,13 @@ class SettingsPage(QWidget):
                                  self.update_setting(k, v) if checked else None)
             
             button_group.addButton(radio)
-            section_layout.addWidget(radio)
+            option_layout.addWidget(radio)
+            option_layout.addStretch()
+            
+            section_layout.addWidget(option_container)
         
-        parent_layout.addWidget(section_frame)
+        container_layout.addWidget(section_frame)
+        parent_layout.addWidget(section_container)
     
     def update_setting(self, key, value):
         """Update a setting value"""

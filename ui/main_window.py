@@ -306,18 +306,17 @@ class MainWindow(QWidget):
         self.scroll_area.setWidget(scroll_content)
         right_layout.addWidget(self.scroll_area)
 
-        # Create settings page (hidden by default)
-        self.settings_page = SettingsPage(self.right, self.settings)
-        self.settings_page.settings_changed.connect(self.apply_settings)
-        self.settings_page.back_clicked.connect(self.show_weather_content)
-        self.settings_page.hide()
-
-        # Add to right panel layout
-        right_layout.addWidget(self.settings_page)
-
         # Add sidebar + main
         self.root.addWidget(self.sidebar)
         self.root.addWidget(self.right)
+
+        # Create settings page overlay (covers entire window including sidebar)
+        self.settings_page = SettingsPage(self, self.settings)
+        self.settings_page.settings_changed.connect(self.apply_settings)
+        self.settings_page.back_clicked.connect(self.show_weather_content)
+        self.settings_page.hide()
+        self.settings_page.setGeometry(0, 0, self.width(), self.height())
+        self.settings_page.raise_()
         
         # Ensure proper z-ordering: background at bottom, dim overlay above it, content on top
         if hasattr(self, 'background_label'):
@@ -722,17 +721,13 @@ class MainWindow(QWidget):
 
     def open_settings(self):
         """Show settings page"""
-        self.scroll_area.hide()
+        self.settings_page.setGeometry(0, 0, self.width(), self.height())
         self.settings_page.show()
-        self.settings_button.hide()
-        self.refresh_button.hide()
+        self.settings_page.raise_()
 
     def show_weather_content(self):
         """Show weather content and hide settings"""
         self.settings_page.hide()
-        self.scroll_area.show()
-        self.settings_button.show()
-        self.refresh_button.show()
 
     def apply_settings(self, new_settings):
         """Apply new settings"""
@@ -963,6 +958,10 @@ class MainWindow(QWidget):
         """Handle window resize to update background"""
         super().resizeEvent(event)
         self.update_background_geometry()
+
+        # Update settings page size to cover entire window
+        if hasattr(self, 'settings_page'):
+            self.settings_page.setGeometry(0, 0, self.width(), self.height())
 
     def update_forecast(self, data):
         """Update 5-day forecast display"""
