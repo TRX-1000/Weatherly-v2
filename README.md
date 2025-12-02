@@ -39,6 +39,9 @@ cd weatherly-v2
 ```bash
 pip install PyQt5
 ```
+```bash
+pip install feedparser
+```
 
 3. Run the application
 ```bash
