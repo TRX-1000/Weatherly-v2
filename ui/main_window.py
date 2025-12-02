@@ -13,6 +13,7 @@ from ui.settings_page import SettingsPage
 
 from tools.weather_api import WeatherAPI
 from tools.news_api import NewsAPI
+from tools.window_config import WindowConfig
 
 
 class WeatherWorker(QThread):
@@ -45,9 +46,20 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.window_config = WindowConfig("window_config.json")
+
         self.setWindowTitle("Weatherly")
-        self.setMinimumSize(1100, 600)
-        self.setGeometry(100, 100, 1100, 600)
+
+        # Apply platform-specific window settings
+        width = self.window_config.get_width()
+        height = self.window_config.get_height()
+        min_width = self.window_config.get_min_width()
+        min_height = self.window_config.get_min_height()
+
+        self.setGeometry(100, 100, width, height)
+        self.setMinimumSize(min_width, min_height)
+
+        
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
@@ -60,9 +72,12 @@ class MainWindow(QWidget):
         # Load saved cities from file
         self.cities_file = "saved_cities.json"
         self.load_cities_from_file()
+
+        # Load settings from file
         self.settings_file = "settings.json"
         self.settings = self.load_settings()
 
+    
         self.sidebar_collapsed = 0
         self.sidebar_expanded = 280
         self.current_sidebar_width = self.sidebar_expanded  # Start expanded
