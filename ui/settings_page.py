@@ -72,6 +72,8 @@ class SettingsPage(QWidget):
             font-size: 26px; 
             font-weight: bold; 
             color: white;
+            border: none;
+            background: none;
             padding-left: 20px;
         """)
         
@@ -123,6 +125,7 @@ class SettingsPage(QWidget):
             font-size: 32px; 
             font-weight: bold; 
             color: white;
+            border: none;
             margin-bottom: 10px;
             letter-spacing: -0.5px;
         """)
@@ -168,6 +171,35 @@ class SettingsPage(QWidget):
         divider_layout.addWidget(left_line)
         divider_layout.addWidget(divider_icon)
         divider_layout.addWidget(right_line)
+
+        save_btn = QPushButton("💾  Save Settings")
+        save_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        save_btn.setFixedSize(300, 45)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #4a8fff, stop:0.5 #5ba3ff, stop:1 #6db5ff);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 18px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #5b9fff, stop:0.5 #6cb3ff, stop:1 #7dc5ff);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #3978ee, stop:0.5 #4a92ee, stop:1 #5ca4ee);
+            }
+        """)
+        save_btn.clicked.connect(self.save_settings)
+        
+
+        layout.addWidget(save_btn)
+
         
         layout.addWidget(divider_container)
         
@@ -177,6 +209,7 @@ class SettingsPage(QWidget):
             font-size: 32px; 
             font-weight: bold; 
             color: white;
+            border: none;
             margin-top: 10px;
             margin-bottom: 10px;
             letter-spacing: -0.5px;
@@ -188,8 +221,7 @@ class SettingsPage(QWidget):
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #1e1e1e, stop:1 #1a1a1a);
-                border: 1px solid #2a2a2a;
-                border-radius: 20px;
+                border: none;
                 padding: 30px;
             }
         """)
@@ -205,29 +237,17 @@ class SettingsPage(QWidget):
             letter-spacing: -0.5px;
         """)
         
-        description = QLabel("A modern weather application featuring a beautiful dark UI, smooth animations, and real-time weather updates from around the world.")
+        description = QLabel("Want to contribute explore the code or contribute? Check out the project on GitHub! Feel free to open issues or submit pull requests. Your feedback and contributions are welcome!")
         description.setStyleSheet("""
             font-size: 15px; 
             color: #bbb; 
             background: none; 
+            border: none;
             line-height: 24px;
         """)
         description.setWordWrap(True)
         
-        # Features list
-        features_label = QLabel("✨ Features:")
-        features_label.setStyleSheet("font-size: 16px; font-weight: 600; color: #ddd; background: none; margin-top: 8px;")
-        
-        features = QLabel("• Real-time weather data\n• 5-day forecast\n• Weather news integration\n• Multiple city tracking\n• Customizable units")
-        features.setStyleSheet("""
-            font-size: 14px; 
-            color: #999; 
-            background: none;
-            line-height: 22px;
-            padding-left: 10px;
-        """)
-        
-        github_btn = QPushButton("🔗  View on GitHub")
+        github_btn = QPushButton("🔗 View on GitHub")
         github_btn.setCursor(QCursor(Qt.PointingHandCursor))
         github_btn.setFixedHeight(55)
         github_btn.setStyleSheet("""
@@ -238,7 +258,7 @@ class SettingsPage(QWidget):
                 border: 1px solid #3a3a3a;
                 border-radius: 14px;
                 padding: 12px 20px;
-                font-size: 16px;
+                font-size: 20px;
                 font-weight: 600;
             }
             QPushButton:hover {
@@ -256,41 +276,14 @@ class SettingsPage(QWidget):
         
         about_layout.addWidget(app_name)
         about_layout.addWidget(description)
-        about_layout.addWidget(features_label)
-        about_layout.addWidget(features)
+
         about_layout.addWidget(github_btn)
         
         layout.addWidget(about_frame)
         
         layout.addStretch()
         
-        # Save button at bottom - Eye-catching gradient
-        save_btn = QPushButton("💾  Save Settings")
-        save_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        save_btn.setFixedHeight(60)
-        save_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #4a8fff, stop:0.5 #5ba3ff, stop:1 #6db5ff);
-                color: white;
-                border: none;
-                border-radius: 16px;
-                font-size: 18px;
-                font-weight: 700;
-                letter-spacing: 0.5px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #5b9fff, stop:0.5 #6cb3ff, stop:1 #7dc5ff);
-            }
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3978ee, stop:0.5 #4a92ee, stop:1 #5ca4ee);
-            }
-        """)
-        save_btn.clicked.connect(self.save_settings)
         
-        layout.addWidget(save_btn)
         
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
@@ -349,10 +342,9 @@ class SettingsPage(QWidget):
                 QFrame {
                     background: transparent;
                     border-radius: 12px;
+                    border: none;
                 }
-                QFrame:hover {
-                    background: rgba(255, 255, 255, 0.03);
-                }
+               
             """)
             
             option_layout = QHBoxLayout(option_container)
@@ -364,6 +356,7 @@ class SettingsPage(QWidget):
                     color: white;
                     font-size: 16px;
                     background: transparent;
+                    border: none;
                     spacing: 15px;
                     font-weight: 500;
                 }
