@@ -1,5 +1,7 @@
 {
-  "temperature_unit": "fahrenheit",
+  "temperature_unit": "celsius",
   "wind_unit": "metric",
-  "auto_refresh": true
+  "auto_refresh": true,
+  "default_city": "Tokyo",
+  "news_count": "15"
 }
