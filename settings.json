@@ -1,7 +1,7 @@
 {
-  "temperature_unit": "celsius",
-  "wind_unit": "metric",
+  "temperature_unit": "fahrenheit",
+  "wind_unit": "imperial",
   "auto_refresh": true,
-  "default_city": "Tokyo",
-  "news_count": "15"
+  "default_city": "Bangalore",
+  "news_count": "5"
 }

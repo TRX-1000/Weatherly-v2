@@ -15,6 +15,10 @@ class WeatherAPI:
         try:
             r = requests.get(f"{self.base_url}/{endpoint}", params=params, timeout=10)
             r.raise_for_status()
+            
+            # Track successful API call
+            self.api_calls_made = getattr(self, 'api_calls_made', 0) + 1
+            
             return r.json()
         except (requests.RequestException, ValueError) as e:
             print(f"API Error: {e}")

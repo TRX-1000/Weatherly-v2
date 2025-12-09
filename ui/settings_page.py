@@ -18,9 +18,10 @@ class SettingsPage(QWidget):
         self.settings = current_settings or {
             "temperature_unit": "celsius",
             "wind_unit": "metric",
+            "auto_refresh": True,
             "default_city": "",
-            "news-count": 10,
-            "auto_refresh": True
+            "news_count": "10",
+            "refresh_interval": "manual"
         }
         
         self.setStyleSheet("background-color: #111;")
@@ -204,11 +205,21 @@ class SettingsPage(QWidget):
             "default_city"
         )
         
+        # Add refresh interval card
+        self.refresh_card = self.create_setting_card(
+            "🔄  Auto-Refresh Interval",
+            "How often to update weather data automatically",
+            [("Manual only", "manual"), ("Every 15 minutes", "15"), ("Every 30 minutes", "30"), ("Every hour", "60")],
+            "refresh_interval"
+        )
+        
         # Add cards to grid (2 columns)
         grid_layout.addWidget(self.temp_card, 0, 0)
         grid_layout.addWidget(self.wind_card, 0, 1)
         grid_layout.addWidget(self.news_card, 1, 0)
         grid_layout.addWidget(self.default_city_card, 1, 1)
+        grid_layout.addWidget(self.refresh_card, 2, 0)
+
         
         layout.addWidget(grid_container)
         
@@ -547,7 +558,7 @@ class SettingsPage(QWidget):
         )
         
         if reply == QMessageBox.Yes:
-            self.clear_cities_requested.emit()
+            self.clear_cities.emit()
             
             # Show success message
             success_msg = QMessageBox(self)

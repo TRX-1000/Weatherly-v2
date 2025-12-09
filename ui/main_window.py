@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
     QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction, QGraphicsBlurEffect
 )
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal, QTimer, QPoint
 from PyQt5.QtGui import QCursor, QPixmap
 
 from ui.sidebar_card import WeatherCard
@@ -14,6 +14,21 @@ from ui.settings_page import SettingsPage
 from tools.weather_api import WeatherAPI
 from tools.news_api import NewsAPI
 from tools.window_config import WindowConfig
+from tools.location_detector import LocationWorker
+
+# Dad jokes for easter egg
+DAD_JOKES = [
+    "Why did the weather report go to therapy? It had too many issues with precipitation! ☔",
+    "What's a tornado's favorite game? Twister! 🌪️",
+    "Why don't meteorologists ever win at poker? Everyone can read their forecasts! 🃏",
+    "What did the cloud say to the lightning bolt? You're shocking! ⚡",
+    "Why was the weatherman embarrassed? He made a mist-ake! 🌫️",
+    "What do you call it when it rains chickens and ducks? Fowl weather! 🦆",
+    "How do hurricanes see? With one eye! 👁️🌀",
+    "What's the difference between weather and climate? You can't weather a tree, but you can climate! 🌳",
+    "Why did the woman go outdoors with her purse open? She expected some change in the weather! 👜",
+    "What do you call a month's worth of rain? England! 🇬🇧☔",
+]
 
 
 class WeatherWorker(QThread):
@@ -41,6 +56,61 @@ class WeatherWorker(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
+    def keyPressEvent(self, event):
+        """Handle key press events for easter eggs"""
+        # Konami code tracking
+        self.konami_sequence.append(event.key())
+            
+            
+        # Keep only last 10 keys
+        if len(self.konami_sequence) > 10:
+            self.konami_sequence.pop(0)
+            
+        # Check if konami code matches
+        if self.konami_sequence == self.konami_code:
+            self.activate_konami_code()
+            
+        super().keyPressEvent(event)
+    
+    def activate_konami_code(self):
+        """Activate Konami Code easter egg"""
+        self.setWindowTitle("Weatherly - GOD MODE ACTIVATED ⚡")
+        
+        # Show dramatic message
+        from PyQt5.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle("🎮 KONAMI CODE ACTIVATED!")
+        msg.setText("⚡ WEATHER GOD MODE UNLOCKED ⚡\n\n"
+                   "You now have ultimate power over... absolutely nothing!\n"
+                   "But you feel awesome! 😎")
+        msg.setStyleSheet("""
+            QMessageBox {
+                background-color: #1a1a1a;
+            }
+            QMessageBox QLabel {
+                color: #FFD700;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton {
+                background-color: #FFD700;
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                padding: 10px 20px;
+                font-size: 14px;
+                font-weight: bold;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: #FFA500;
+            }
+        """)
+        msg.exec_()
+        
+        # Reset after 5 seconds
+        QTimer.singleShot(5000, lambda: self.setWindowTitle("Weatherly"))
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -58,12 +128,13 @@ class MainWindow(QWidget):
 
         self.setGeometry(100, 100, width, height)
         self.setMinimumSize(min_width, min_height)
-
         
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
+        self.total_api_calls = 0
         self.news_api = NewsAPI()
+
         self.current_city = None
         self.saved_cities = []
         self.city_cards = {}
@@ -77,6 +148,26 @@ class MainWindow(QWidget):
         self.settings_file = "settings.json"
         self.settings = self.load_settings()
 
+        # Konami code tracking
+        self.konami_sequence = []
+        self.konami_code = [
+            Qt.Key_Up, Qt.Key_Up, Qt.Key_Down, Qt.Key_Down,
+            Qt.Key_Left, Qt.Key_Right, Qt.Key_Left, Qt.Key_Right,
+            Qt.Key_B, Qt.Key_A
+        ]
+
+        # Refresh button spam tracking
+        self.refresh_click_count = 0
+        self.refresh_click_timer = QTimer()
+        self.refresh_click_timer.timeout.connect(self.reset_refresh_count)
+        self.refresh_original_icon = "↻"
+
+        # Setup refresh timer
+        self.refresh_timer = QTimer(self)
+        self.refresh_timer.timeout.connect(self.auto_refresh_weather)
+        self.setup_refresh_timer()
+
+        # ---------------- MAIN LAYOUT ----------------
     
         self.sidebar_collapsed = 0
         self.sidebar_expanded = 280
@@ -151,6 +242,9 @@ class MainWindow(QWidget):
             }
         """)
         self.search_bar.returnPressed.connect(self.search_weather)
+        
+        # Track for developer mode
+        self.dev_mode_active = False
 
         search_layout.addWidget(self.search_bar)
 
@@ -254,7 +348,7 @@ class MainWindow(QWidget):
             }
             QPushButton:hover { background: #333; }
         """)
-        self.refresh_button.clicked.connect(self.refresh_weather)
+        self.refresh_button.clicked.connect(self.on_refresh_clicked)
 
         self.settings_button = QPushButton("⚙️")
         self.settings_button.setFixedSize(45, 45)
@@ -268,6 +362,27 @@ class MainWindow(QWidget):
             QPushButton:hover { background: #333; }""")
         
         self.settings_button.clicked.connect(self.open_settings)
+        
+        self.location_button = QPushButton("📍")
+        self.location_button.setFixedSize(45, 45)
+        self.location_button.setStyleSheet("""
+            QPushButton {
+                background: #262626;
+                border-radius: 10px;
+                color: white;
+                font-size: 22px;
+            }
+            QPushButton:hover { background: #333; }
+        """)
+        self.location_button.clicked.connect(self.detect_location)
+        self.location_button.setToolTip("Detect my location")
+
+
+        top_bar_container.addWidget(self.floating_menu_button)
+        top_bar_container.addWidget(center_spacer)
+        top_bar_container.addWidget(self.location_button)
+        top_bar_container.addWidget(self.settings_button)
+        top_bar_container.addWidget(self.refresh_button)
 
 
         top_bar_container.addWidget(self.floating_menu_button)
@@ -329,6 +444,7 @@ class MainWindow(QWidget):
         self.settings_page = SettingsPage(self, self.settings)
         self.settings_page.settings_changed.connect(self.apply_settings)
         self.settings_page.back_clicked.connect(self.show_weather_content)
+        self.settings_page.clear_cities.connect(self.clear_all_cities)
         self.settings_page.hide()
         self.settings_page.setGeometry(0, 0, self.width(), self.height())
         self.settings_page.raise_()
@@ -356,12 +472,74 @@ class MainWindow(QWidget):
         self.sidebar_max_anim.setDuration(250)
         self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)
 
-        # Load default city if available
-        if self.saved_cities:
+        # Load default city or first saved city
+        default_city = self.settings.get("default_city", "").strip()
+        if default_city:
+            self.search_bar.setText(default_city)
+            self.search_weather()
+        elif self.saved_cities:
             self.search_bar.setText(self.saved_cities[0])
             self.search_weather()
 
     # ---------------- City Persistence ----------------
+
+    def detect_location(self):
+        """Detect user's location and load weather"""
+        # Change button to show loading
+        self.location_button.setText("⏳")
+        self.location_button.setEnabled(False)
+        
+        # Create worker thread
+        self.location_worker = LocationWorker()
+        self.location_worker.finished.connect(self.on_location_detected)
+        self.location_worker.error.connect(self.on_location_error)
+        self.location_worker.start()
+    
+    def on_location_detected(self, city):
+        """Handle successful location detection"""
+        self.location_button.setText("📍")
+        self.location_button.setEnabled(True)
+        
+        # Load weather for detected city
+        self.search_bar.setText(city)
+        self.search_weather()
+        
+        print(f"Location detected: {city}")
+    
+    def on_location_error(self, error_msg):
+        """Handle location detection error"""
+        self.location_button.setText("📍")
+        self.location_button.setEnabled(True)
+        
+        print(f"Location detection error: {error_msg}")
+        
+        # Show error message
+        self.city_label.setText("Location Detection Failed")
+        self.description_label.setText(error_msg)
+
+    def setup_refresh_timer(self):
+        """Setup auto-refresh timer based on settings"""
+        self.refresh_timer.stop()
+        
+        interval = self.settings.get("refresh_interval", "manual")
+        
+        if interval != "manual":
+            minutes = int(interval)
+            milliseconds = minutes * 60 * 1000
+            self.refresh_timer.start(milliseconds)
+            print(f"Auto-refresh enabled: every {minutes} minutes")
+        else:
+            print("Auto-refresh disabled (manual mode)")
+    
+    def auto_refresh_weather(self):
+        """Auto-refresh weather data"""
+        print("Auto-refreshing weather data...")
+        if self.current_city:
+            self.search_weather()
+        
+        # Refresh all sidebar cities
+        for city in self.saved_cities:
+            self.fetch_city_weather(city)
     def load_cities_from_file(self):
         """Load saved cities from JSON file"""
         if os.path.exists(self.cities_file):
@@ -407,8 +585,9 @@ class MainWindow(QWidget):
         self.description_label = QLabel("--")
         self.description_label.setStyleSheet("font-size: 22px; color: #fff; background: none;")
         
-        details_layout = QHBoxLayout()
-        details_layout.setSpacing(40)
+        # Main details row (feels like, humidity, wind)
+        main_details_layout = QHBoxLayout()
+        main_details_layout.setSpacing(40)
         
         self.feels_like_label = QLabel("Feels like: --°C")
         self.feels_like_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
@@ -419,15 +598,38 @@ class MainWindow(QWidget):
         self.wind_label = QLabel("Wind: -- m/s")
         self.wind_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
         
-        details_layout.addWidget(self.feels_like_label)
-        details_layout.addWidget(self.humidity_label)
-        details_layout.addWidget(self.wind_label)
-        details_layout.addStretch()
+        main_details_layout.addWidget(self.feels_like_label)
+        main_details_layout.addWidget(self.humidity_label)
+        main_details_layout.addWidget(self.wind_label)
+        main_details_layout.addStretch()
+        
+        # Additional details row (pressure, visibility, clouds, UV)
+        additional_details_layout = QHBoxLayout()
+        additional_details_layout.setSpacing(40)
+        
+        self.pressure_label = QLabel("Pressure: -- hPa")
+        self.pressure_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        
+        self.clouds_label = QLabel("Clouds: --%")
+        self.clouds_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        
+        self.sunrise_label = QLabel("Sunrise: --:--")
+        self.sunrise_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        
+        self.sunset_label = QLabel("Sunset: --:--")
+        self.sunset_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        
+        additional_details_layout.addWidget(self.pressure_label)
+        additional_details_layout.addWidget(self.clouds_label)
+        additional_details_layout.addWidget(self.sunrise_label)
+        additional_details_layout.addWidget(self.sunset_label)
+        additional_details_layout.addStretch()
         
         current_layout.addWidget(self.city_label)
         current_layout.addWidget(self.temp_label)
         current_layout.addWidget(self.description_label)
-        current_layout.addLayout(details_layout)
+        current_layout.addLayout(main_details_layout)
+        current_layout.addLayout(additional_details_layout)
         
         self.content_layout.addWidget(self.current_section)
 
@@ -534,6 +736,8 @@ class MainWindow(QWidget):
         """Create a city card with all event handlers"""
         card = WeatherCard(city)
         card.city_name = city
+        card.click_count = 0
+        card.last_click_time = 0
         
         # Left click handler
         card.mousePressEvent = self.create_card_click_handler(city, card)
@@ -554,7 +758,23 @@ class MainWindow(QWidget):
         def handler(event):
             # Only handle left clicks
             if event.button() == Qt.LeftButton:
-                self.load_city_weather(city)
+                import time
+                current_time = time.time()
+                
+                # Reset if more than 1 second between clicks
+                if current_time - card.last_click_time > 1.0:
+                    card.click_count = 0
+                
+                card.click_count += 1
+                card.last_click_time = current_time
+                
+                # Triple click = dad joke!
+                if card.click_count == 3:
+                    self.show_dad_joke(card)
+                    card.click_count = 0
+                else:
+                    # Normal click - load weather
+                    self.load_city_weather(city)
         return handler
     
     def show_city_context_menu(self, position, city, card):
@@ -628,6 +848,23 @@ class MainWindow(QWidget):
         """Search and display weather for the city in search bar"""
         city = self.search_bar.text().strip()
         if not city:
+            return
+        
+        # Check for Australian cities to flip display
+        australian_cities = ["sydney", "melbourne", "brisbane", "perth", "adelaide", "canberra", "hobart", "darwin"]
+        if any(aus_city in city.lower() for aus_city in australian_cities):
+            QTimer.singleShot(100, self.activate_australian_mode)
+        
+        # Check for developer mode secret code
+        if city.lower() == "dev.weather.debug.mode.enable":
+            self.open_developer_settings()
+            self.search_bar.clear()
+            return
+        
+        # Check for Channel 42 easter egg
+        if city.lower() == "channel 42":
+            self.show_channel_42()
+            self.search_bar.clear()
             return
         
         try:
@@ -709,6 +946,590 @@ class MainWindow(QWidget):
             import traceback
             traceback.print_exc()
 
+    def clear_all_cities(self):
+        """Clear all saved cities from sidebar"""
+        # Clear the list
+        self.saved_cities.clear()
+        self.save_cities_to_file()
+        
+        # Remove all cards from UI
+        for city, card in list(self.city_cards.items()):
+            self.sidebar_layout.removeWidget(card)
+            card.deleteLater()
+        
+        self.city_cards.clear()
+        
+        # Clear current weather display
+        self.current_city = None
+        self.city_label.setText("Select a city to view weather")
+        self.temp_label.setText("--°C")
+        self.description_label.setText("--")
+        self.feels_like_label.setText("Feels like: --°C")
+        self.humidity_label.setText("Humidity: --%")
+        self.wind_label.setText("Wind: -- m/s")
+        self.pressure_label.setText("Pressure: -- hPa")
+        self.clouds_label.setText("Clouds: --%")
+        self.sunrise_label.setText("Sunrise: --:--")
+        self.sunset_label.setText("Sunset: --:--")
+        self.clear_news()
+        
+        # Clear forecast
+        for card in self.forecast_cards:
+            card.day_label.setText("--")
+            card.temp_label.setText("--°")
+            card.desc_label.setText("--")
+            card.icon_label.setText("🌤️")
+        
+        # Reset background
+        self.right.setStyleSheet("background-color: #111;")
+        if hasattr(self, 'background_label'):
+            self.background_label.clear()
+        
+        # Clear search bar
+        self.search_bar.clear()
+
+    def activate_australian_mode(self):
+        """Flip the UI upside down for Australian cities"""
+        if not hasattr(self, 'australian_mode_active'):
+            self.australian_mode_active = False
+        
+        if not self.australian_mode_active:
+            # Rotate the scroll area content
+            from PyQt5.QtWidgets import QGraphicsRotation
+            rotation = QPropertyAnimation(self.scroll_area, b"rotation")
+            rotation.setDuration(1000)
+            rotation.setStartValue(0)
+            rotation.setEndValue(180)
+            rotation.setEasingCurve(QEasingCurve.InOutCubic)
+            
+            # Store animation
+            self.aussie_animation = rotation
+            
+            # Apply CSS transform instead
+            self.scroll_area.setStyleSheet(self.scroll_area.styleSheet() + """
+                QScrollArea {
+                    transform: rotate(180deg);
+                }
+            """)
+            
+            self.australian_mode_active = True
+            
+            # Show message
+            from PyQt5.QtWidgets import QLabel
+            aussie_msg = QLabel("🙃 G'day mate! Flipped for Australia!", self)
+            aussie_msg.setStyleSheet("""
+                background-color: rgba(255, 165, 0, 220);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 16px;
+                font-weight: bold;
+            """)
+            aussie_msg.setAlignment(Qt.AlignCenter)
+            aussie_msg.adjustSize()
+            aussie_msg.move(
+                (self.width() - aussie_msg.width()) // 2,
+                100
+            )
+            aussie_msg.show()
+            aussie_msg.raise_()
+            
+            # Remove message and flip after 5 seconds
+            QTimer.singleShot(5000, aussie_msg.deleteLater)
+            QTimer.singleShot(5000, self.deactivate_australian_mode)
+    
+    def deactivate_australian_mode(self):
+        """Disable Australian mode"""
+        if hasattr(self, 'australian_mode_active') and self.australian_mode_active:
+            # Reset stylesheet
+            self.scroll_area.setStyleSheet("""
+                QScrollArea {
+                    border: none;
+                    background: transparent;
+                }
+                QScrollBar:vertical {
+                    background: #111;
+                    width: 10px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical {
+                    background: #333;
+                    border-radius: 5px;
+                    min-height: 30px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background: #444;
+                }
+            """)
+            self.australian_mode_active = False
+
+    
+    def open_developer_settings(self):
+        """Open developer settings easter egg"""
+        from PyQt5.QtWidgets import QDialog, QTextEdit
+        import psutil
+        import os
+        from datetime import datetime, timedelta
+            
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🔧 Developer Console")
+        dialog.setModal(True)
+        dialog.setFixedSize(600, 500)
+        dialog.setStyleSheet("background-color: #0a0a0a;")
+            
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(20, 20, 20, 20)
+            
+        title = QLabel("⚙️ DEVELOPER MODE ACTIVATED")
+        title.setStyleSheet("""
+            font-size: 22px;
+            font-weight: bold;
+            color: #00ff00;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+        """)
+        title.setAlignment(Qt.AlignCenter)
+            
+        # Info display
+        info_text = QTextEdit()
+        info_text.setReadOnly(True)
+        info_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #1a1a1a;
+                color: #00ff00;
+                border: 2px solid #00ff00;
+                border-radius: 8px;
+                padding: 15px;
+                font-family: 'Courier New', monospace;
+                font-size: 13px;
+            }
+        """)
+            
+        # Get REAL system and app information
+        try:
+            process = psutil.Process(os.getpid())
+            memory_info = process.memory_info()
+            memory_mb = memory_info.rss / (1024 * 1024)
+            cpu_percent = process.cpu_percent(interval=0.1)
+                
+            # Calculate app uptime
+            create_time = datetime.fromtimestamp(process.create_time())
+            uptime = datetime.now() - create_time
+            uptime_str = str(uptime).split('.')[0]  # Remove microseconds
+                
+        except:
+            memory_mb = 0
+            cpu_percent = 0
+            uptime_str = "Unknown"
+            
+        # Real API call tracking (you'll need to add this)
+        api_calls_made = getattr(self, 'total_api_calls', 0)
+            
+        # Calculate cache size
+        cache_size_mb = 0
+        try:
+            if os.path.exists(self.cities_file):
+                cache_size_mb += os.path.getsize(self.cities_file) / (1024 * 1024)
+            if os.path.exists(self.settings_file):
+                cache_size_mb += os.path.getsize(self.settings_file) / (1024 * 1024)
+        except:
+            pass
+            
+        # Count Easter eggs found
+        easter_eggs_found = 0
+        if hasattr(self, 'konami_sequence'):
+            easter_eggs_found += 1
+        if hasattr(self, 'dev_mode_active') and self.dev_mode_active:
+            easter_eggs_found += 1
+        if hasattr(self, 'channel_42_found') and self.channel_42_found:
+            easter_eggs_found += 1
+        if hasattr(self, 'australian_mode_active'):
+            easter_eggs_found += 1
+            
+        # Get refresh interval setting
+        refresh_interval = self.settings.get("refresh_interval", "manual")
+        if refresh_interval == "manual":
+            refresh_status = "MANUAL (Disabled)"
+        else:
+            refresh_status = f"EVERY {refresh_interval} MINUTES"
+            
+        # Current weather API info
+        current_city = self.current_city if self.current_city else "None"
+        
+        dev_info = f"""
+    ╔════════════════════════════════════════════╗
+    ║         WEATHERLY DEVELOPER CONSOLE        ║
+    ╚════════════════════════════════════════════╝
+
+    [SYSTEM STATUS]
+    ├─ Status: OPERATIONAL ✓
+    ├─ Version: 2.0.0
+    ├─ Build: PRODUCTION
+    ├─ Uptime: {uptime_str}
+    └─ Platform: {self.window_config.get_platform_name()}
+
+    [API STATISTICS]
+    ├─ Total Calls Made: {api_calls_made:,}
+    ├─ API Key: {'*' * 28}{self.weather_api.api_key[-4:]}
+    ├─ Current City: {current_city}
+    ├─ Saved Cities: {len(self.saved_cities)}
+    └─ Auto-Refresh: {refresh_status}
+
+    [CACHE & STORAGE]
+    ├─ Cache Size: {cache_size_mb:.2f} MB
+    ├─ Cities File: {self.cities_file}
+    ├─ Settings File: {self.settings_file}
+    └─ Config Files: 3 loaded
+
+    [PERFORMANCE METRICS]
+    ├─ Memory Usage: {memory_mb:.1f} MB
+    ├─ CPU Usage: {cpu_percent:.1f}%
+    ├─ Active Workers: {len(getattr(self, 'workers', []))}
+    └─ News Workers: {len(self.news_workers)}
+
+    [CURRENT SETTINGS]
+    ├─ Temperature: {self.settings.get('temperature_unit', 'celsius').upper()}
+    ├─ Wind Speed: {self.settings.get('wind_unit', 'metric').upper()}
+    ├─ News Count: {self.settings.get('news_count', '10')} articles
+    ├─ Default City: {self.settings.get('default_city', 'None') or 'None'}
+    └─ Refresh: {refresh_interval}
+
+    [WINDOW CONFIGURATION]
+    ├─ Size: {self.width()}x{self.height()}
+    ├─ Min Size: {self.minimumWidth()}x{self.minimumHeight()}
+    ├─ Sidebar: {'Expanded' if self.current_sidebar_width > 0 else 'Collapsed'}
+    └─ Position: ({self.x()}, {self.y()})
+
+    [EASTER EGGS DISCOVERED]
+    ├─ Konami Code: {'✓' if hasattr(self, 'konami_sequence') else '✗'}
+    ├─ Developer Mode: ✓ (You're here!)
+    ├─ Channel 42: {'✓' if hasattr(self, 'channel_42_found') else '✗'}
+    ├─ Australian Mode: {'✓' if hasattr(self, 'australian_mode_active') else '✗'}
+    ├─ Dad Jokes: {'✓' if any(hasattr(card, 'click_count') for card in self.city_cards.values()) else '✗'}
+    ├─ Refresh Spam: {'✓' if hasattr(self, 'refresh_click_count') else '✗'}
+    ├─ Search Sass: {'✓' if hasattr(self, 'search_click_count') else '✗'}
+    ├─ Color Invert: {'✓' if hasattr(self, 'inverted_mode') else '✗'}
+    └─ Total Found: {easter_eggs_found}/8
+
+    [DEBUG LOG]
+    > Weather API initialized: ✓
+    > Location detector ready: ✓
+    > News feed operational: ✓
+    > Settings loaded: ✓
+    > All systems nominal: ✓
+
+    [DEVELOPER INFO]
+    GitHub: https://github.com/TRX-1000/Weatherly-v2
+    API: OpenWeatherMap v2.5
+    Framework: PyQt5
+            """
+            
+        info_text.setText(dev_info)
+            
+        close_btn = QPushButton("✓ Close Console")
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #00ff00;
+                color: #000;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 14px;
+                font-weight: bold;
+                font-family: 'Courier New', monospace;
+            }
+            QPushButton:hover {
+                background-color: #00cc00;
+            }
+        """)
+        close_btn.clicked.connect(dialog.close)
+            
+        layout.addWidget(title)
+        layout.addWidget(info_text)
+        layout.addWidget(close_btn)
+            
+        dialog.exec_()
+            
+        # Mark as found
+        self.dev_mode_active = True
+
+    def show_channel_42(self):
+        """Show Channel 42 secret weather channel"""
+        import random
+        
+        # Absurd fictional locations
+        locations = [
+            ("Gotham City", "Stormy with 80% chance of Batman", "⚡🦇", -5, 12),
+            ("Hogwarts", "Dementors moving in from the north", "🌫️✨", 3, 8),
+            ("Mordor", "One does not simply walk into this forecast", "🌋👁️", 45, 52),
+            ("Atlantis", "Wet. Very wet. Surprisingly wet.", "🌊🧜", 18, 20),
+            ("Narnia", "Always winter, never Christmas", "❄️🦁", -15, -10),
+            ("Springfield", "D'oh! Partly cloudy", "☁️🍩", 22, 28),
+            ("Bikini Bottom", "Perfect weather for jellyfishing!", "🌊🍔", 12, 15),
+            ("Asgard", "Worthy thunderstorms expected", "⚡🔨", 8, 14),
+            ("Death Star", "No weather. It's a space station.", "⭐💀", -273, -273),
+            ("Emerald City", "Follow the yellow brick road to sunshine", "🌈👠", 24, 30),
+            ("Silent Hill", "Fog advisory in effect... forever", "🌫️😱", 10, 15),
+            ("Twin Peaks", "Damn fine weather with coffee", "☕🌲", 15, 20),
+            ("Westeros", "Winter is coming (as usual)", "❄️⚔️", -5, 5),
+            ("Jurassic Park", "Clever girl... the storm is here", "🦖⛈️", 30, 35),
+            ("The Upside Down", "Extremely strange things", "🙃👾", 666, 666),
+        ]
+        
+        location = random.choice(locations)
+        city_name, description, emoji, temp_min, temp_max = location
+        temp = random.randint(temp_min, temp_max)
+        
+        # Update display with absurd data
+        self.city_label.setText(f"📺 CHANNEL 42: {city_name}")
+        self.temp_label.setText(f"{temp}°C {emoji}")
+        self.description_label.setText(description)
+        
+        # Add absurd details
+        self.feels_like_label.setText(f"Feels like: Absolutely unreal")
+        self.humidity_label.setText(f"Humidity: {random.randint(0, 200)}%")
+        self.wind_label.setText(f"Wind: {random.choice(['Mild', 'Dragon breath', 'Existential', 'Yes'])}")
+        self.pressure_label.setText(f"Pressure: {random.randint(1, 9999)} hopes/dreams")
+        self.clouds_label.setText(f"Clouds: {random.choice(['Fluffy', 'Ominous', 'Pixelated', 'Sentient'])} ")
+        self.sunrise_label.setText(f"🌅 Sunrise: {random.choice(['Never', 'Always', '??:??', 'Quantum'])}")
+        self.sunset_label.setText(f"🌇 Sunset: {random.choice(['Maybe', 'Depends', 'Ask later', '42:00'])}")
+        
+        # Clear forecast and news
+        for card in self.forecast_cards:
+            card.day_label.setText(random.choice(["Mon?", "Tues!", "Nope", "Maybe", "Soon"]))
+            card.temp_label.setText(f"{random.randint(-50, 100)}°")
+            card.desc_label.setText(random.choice([
+                "Chaos", "Mystery", "???", "Uncertain", "Glitchy", "Legendary"
+            ]))
+            card.icon_label.setText(random.choice(["❓", "🎲", "🎪", "🎭", "🎰", "🃏"]))
+        
+        self.clear_news()
+        
+        # Mark as found
+        self.channel_42_found = True
+        
+        # Show notification
+        from PyQt5.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle("📺 Channel 42")
+        msg.setText("Welcome to Channel 42!\n\n"
+                   "The weather channel that doesn't exist...\n"
+                   "Broadcasting from locations that may or may not be real.\n\n"
+                   "Don't tell anyone about this. 🤫")
+        msg.setStyleSheet("""
+            QMessageBox {
+                background-color: #1a1a1a;
+            }
+            QMessageBox QLabel {
+                color: white;
+                font-size: 14px;
+            }
+            QPushButton {
+                background-color: #5ba3ff;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 20px;
+                font-size: 14px;
+                min-width: 80px;
+            }
+        """)
+        msg.exec_()
+    def reset_refresh_count(self):
+        self.refresh_click_count = 0
+        self.refresh_button.setText(self.refresh_original_icon)
+
+    def on_refresh_clicked(self):
+        """Handle refresh button clicks with easter egg"""
+        self.refresh_click_count += 1
+        
+        # Restart timer (2 seconds to reset count)
+        self.refresh_click_timer.stop()
+        self.refresh_click_timer.start(2000)
+        
+        if self.refresh_click_count == 5:
+            # Change icon
+            self.refresh_button.setText("🔄")
+            self.refresh_weather()
+            
+        elif self.refresh_click_count == 10:
+            # Show message
+            self.refresh_button.setText("😤")
+            self.show_refresh_warning()
+            
+        elif self.refresh_click_count >= 15:
+            # Button takes off!
+            self.refresh_button_takeoff()
+            self.refresh_click_count = 0
+        else:
+            # Normal refresh
+            self.refresh_weather()
+    
+    def show_refresh_warning(self):
+        """Show warning message for excessive refreshing"""
+        from PyQt5.QtWidgets import QLabel
+        
+        warning = QLabel("That's enough refreshing! The weather doesn't change that fast! 🙄", self)
+        warning.setStyleSheet("""
+            QLabel {
+                background-color: rgba(255, 100, 100, 230);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 12px;
+                font-size: 15px;
+                font-weight: bold;
+                border: 2px solid #ff6b6b;
+            }
+        """)
+        warning.adjustSize()
+        warning.move(
+            (self.width() - warning.width()) // 2,
+            self.height() // 2 - 100
+        )
+        warning.show()
+        warning.raise_()
+        
+        # Remove after 3 seconds
+        QTimer.singleShot(3000, warning.deleteLater)
+    
+    def refresh_button_takeoff(self):
+        """Make refresh button fly away"""
+        # Disable button during animation
+        self.refresh_button.setEnabled(False)
+        self.refresh_button.setText("🚀")
+        
+        # Store original position
+        original_pos = self.refresh_button.pos()
+        
+        # Create animation
+        self.refresh_takeoff_anim = QPropertyAnimation(self.refresh_button, b"pos")
+        self.refresh_takeoff_anim.setDuration(2000)
+        self.refresh_takeoff_anim.setStartValue(original_pos)
+        
+        # Random end position (off screen)
+        import random
+        end_x = random.choice([-100, self.width() + 100])
+        end_y = random.randint(-100, self.height() + 100)
+        self.refresh_takeoff_anim.setEndValue(self.refresh_button.mapToParent(
+            self.refresh_button.rect().topLeft()) + QPoint(end_x, end_y))
+        
+        self.refresh_takeoff_anim.setEasingCurve(QEasingCurve.InOutQuad)
+        
+        # Add rotation animation
+        self.refresh_button.setStyleSheet(self.refresh_button.styleSheet())
+        
+        # When finished, reset
+        self.refresh_takeoff_anim.finished.connect(self.reset_refresh_button)
+        self.refresh_takeoff_anim.start()
+        
+        # Show message
+        from PyQt5.QtWidgets import QLabel
+        takeoff_msg = QLabel("Houston, we have liftoff! 🚀✨", self)
+        takeoff_msg.setStyleSheet("""
+            QLabel {
+                background-color: rgba(74, 143, 255, 230);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: bold;
+                border: 2px solid #5ba3ff;
+            }
+        """)
+        takeoff_msg.adjustSize()
+        takeoff_msg.move(
+            (self.width() - takeoff_msg.width()) // 2,
+            self.height() // 2
+        )
+        takeoff_msg.show()
+        takeoff_msg.raise_()
+        
+        QTimer.singleShot(2500, takeoff_msg.deleteLater)
+    
+    def reset_refresh_button(self):
+        """Reset refresh button to original position"""
+        # Small delay for dramatic effect
+        QTimer.singleShot(1000, self._actually_reset_refresh_button)
+    
+    def _actually_reset_refresh_button(self):
+        """Actually reset the button"""
+        self.refresh_button.setText(self.refresh_original_icon)
+        self.refresh_button.setEnabled(True)
+        
+        # Get the parent layout and re-add button
+        # We need to find its original position in the layout
+        # For now, just set it back to a reasonable position
+        self.refresh_button.move(self.refresh_button.parent().width() - 60, 15)
+        
+        # Show "welcome back" message
+        from PyQt5.QtWidgets import QLabel
+        welcome_msg = QLabel("Welcome back, refresh button! 👋", self)
+        welcome_msg.setStyleSheet("""
+            QLabel {
+                background-color: rgba(90, 200, 90, 230);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        welcome_msg.adjustSize()
+        welcome_msg.move(
+            self.width() - welcome_msg.width() - 20,
+            80
+        )
+        welcome_msg.show()
+        welcome_msg.raise_()
+        
+        QTimer.singleShot(2000, welcome_msg.deleteLater)
+    
+    def reset_refresh_count(self):
+        """Reset refresh click counter"""
+        if self.refresh_click_count > 0 and self.refresh_click_count < 15:
+            self.refresh_button.setText(self.refresh_original_icon)
+        self.refresh_click_count = 0
+        self.refresh_click_timer.stop()
+
+    def show_dad_joke(self, card):
+        """Show a random dad joke"""
+        import random
+        from PyQt5.QtWidgets import QLabel
+        
+        joke = random.choice(DAD_JOKES)
+        
+        # Create floating joke label
+        joke_label = QLabel(joke, self)
+        joke_label.setStyleSheet("""
+            QLabel {
+                background-color: rgba(90, 163, 255, 240);
+                color: white;
+                padding: 20px 25px;
+                border-radius: 15px;
+                font-size: 15px;
+                font-weight: 600;
+                border: 3px solid #4a8fff;
+            }
+        """)
+        joke_label.setWordWrap(True)
+        joke_label.setMaximumWidth(400)
+        joke_label.adjustSize()
+        
+        # Position near the card
+        global_pos = card.mapToGlobal(card.rect().center())
+        local_pos = self.mapFromGlobal(global_pos)
+        
+        joke_label.move(
+            max(10, min(local_pos.x() - joke_label.width() // 2, self.width() - joke_label.width() - 10)),
+            max(10, min(local_pos.y() - joke_label.height() - 20, self.height() - joke_label.height() - 10))
+        )
+        
+        joke_label.show()
+        joke_label.raise_()
+        
+        # Fade out and remove after 4 seconds
+        QTimer.singleShot(4000, joke_label.deleteLater)
+
     # ---------------- Settings Management ----------------
     def load_settings(self):
         """Load settings from JSON file"""
@@ -723,7 +1544,10 @@ class MainWindow(QWidget):
         return {
             "temperature_unit": "celsius",
             "wind_unit": "metric",
-            "auto_refresh": True
+            "auto_refresh": True,
+            "default_city": "",
+            "news_count": "10",
+            "refresh_interval": "manual"
         }
 
     def save_settings_to_file(self):
@@ -748,6 +1572,8 @@ class MainWindow(QWidget):
         """Apply new settings"""
         self.settings = new_settings
         self.save_settings_to_file()
+
+        self.setup_refresh_timer()
         
         # Refresh weather with new units if a city is loaded
         if self.current_city:
@@ -810,7 +1636,7 @@ class MainWindow(QWidget):
         self.clear_news()
         
         if not news_items:
-            no_news_label = QLabel("📭 No recent weather news found for this location.")
+            no_news_label = QLabel("🔭 No recent weather news found for this location.")
             no_news_label.setStyleSheet("""
                 font-size: 15px; 
                 color: #888;
@@ -822,7 +1648,11 @@ class MainWindow(QWidget):
             self.news_layout.addWidget(no_news_label)
             return
         
-        for item in news_items:
+        # Get news count from settings
+        news_count = int(self.settings.get("news_count", "10"))
+        
+        # Limit news items to the configured count
+        for item in news_items[:news_count]:
             news_card = NewsCard(
                 item["title"],
                 item["source"],
@@ -850,6 +1680,10 @@ class MainWindow(QWidget):
 
     def update_current_weather(self, data):
         """Update current weather display"""
+        # Track API call
+        self.total_api_calls = getattr(self.weather_api, 'api_calls_made', 0)
+        
+        self.city_label.setText(f"{data['city']}, {data['country']}")
         self.city_label.setText(f"{data['city']}, {data['country']}")
         self.temp_label.setText(self.format_temperature(data['temperature']))
         self.description_label.setText(data['description'].title())
@@ -857,10 +1691,21 @@ class MainWindow(QWidget):
         self.humidity_label.setText(f"Humidity: {data['humidity']}%")
         self.wind_label.setText(f"Wind: {self.format_wind_speed(data['wind_speed'])}")
         
+        # Update additional weather data
+        self.pressure_label.setText(f"Pressure: {data['pressure']} hPa")
+        self.clouds_label.setText(f"Clouds: {data['clouds']}%")
+        
+        # Format sunrise/sunset times
+        from datetime import datetime
+        sunrise_time = datetime.fromtimestamp(data['sunrise'] + data['timezone']).strftime('%H:%M')
+        sunset_time = datetime.fromtimestamp(data['sunset'] + data['timezone']).strftime('%H:%M')
+        self.sunrise_label.setText(f"🌅 Sunrise: {sunrise_time}")
+        self.sunset_label.setText(f"🌇 Sunset: {sunset_time}")
+        
         # Update background based on weather using weather ID
         weather_id = data.get('id', 800)
         self.update_background(weather_id)
-    
+
     def update_background(self, weather_id):
         """Update background image based on OpenWeatherMap weather ID"""
         # Map OpenWeatherMap weather IDs to background images
