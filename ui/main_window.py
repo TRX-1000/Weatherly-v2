@@ -18,18 +18,38 @@ from tools.location_detector import LocationWorker
 
 # Dad jokes for easter egg
 DAD_JOKES = [
-    "Why did the weather report go to therapy? It had too many issues with precipitation! ☔",
-    "What's a tornado's favorite game? Twister! 🌪️",
-    "Why don't meteorologists ever win at poker? Everyone can read their forecasts! 🃏",
-    "What did the cloud say to the lightning bolt? You're shocking! ⚡",
-    "Why was the weatherman embarrassed? He made a mist-ake! 🌫️",
-    "What do you call it when it rains chickens and ducks? Fowl weather! 🦆",
-    "How do hurricanes see? With one eye! 👁️🌀",
-    "What's the difference between weather and climate? You can't weather a tree, but you can climate! 🌳",
-    "Why did the woman go outdoors with her purse open? She expected some change in the weather! 👜",
-    "What do you call a month's worth of rain? England! 🇬🇧☔",
+    "Why did the weather report go to therapy? It had too many issues with precipitation!",
+    "What's a tornado's favorite game? Twister!",
+    "Why don't meteorologists ever win at poker? Everyone can read their forecasts!",
+    "What did the cloud say to the lightning bolt? You're shocking!",
+    "Why was the weatherman embarrassed? He made a mist-ake!",
+    "What do you call it when it rains chickens and ducks? Fowl weather!",
+    "How do hurricanes see? With one eye!",
+    "What's the difference between weather and climate? You can't weather a tree, but you can climate!",
+    "Why did the woman go outdoors with her purse open? She expected some change in the weather!",
+    "What do you call a month's worth of rain? England!",
+    "I tried telling a joke about the wind… but it blew.",
+    "Why did the sun go to school? To get a little brighter!",
+    "What do you call a snowman in the summer? A puddle!",
+    "Why did the lightning bolt break up with the cloud? There was no spark!",
+    "How does a raindrop keep its pants up? With a rain belt!",
+    "Why don't mountains get cold in winter? …They wear snowcaps.",
+    "I wanted to be a meteorologist… but my career never took off the ground.”",
+    "Why was the fog so popular? Because it was down to earth!",
+    "Why did the rainbow get promoted? …It brought a lot of color to the team.",
+    "Click me again and I'll start charging a dew-ty fee.",
+
+
 ]
 
+class SassySearchBar(QLineEdit):
+    """Custom search bar with sass easter egg"""
+    clicked = pyqtSignal()
+    
+    def mousePressEvent(self, event):
+        """Override mouse press to emit signal"""
+        self.clicked.emit()
+        super().mousePressEvent(event)
 
 class WeatherWorker(QThread):
     """Background thread for fetching weather data"""
@@ -221,7 +241,7 @@ class MainWindow(QWidget):
         search_layout = QVBoxLayout(search_container)
         search_layout.setContentsMargins(15, 5, 15, 15)
 
-        self.search_bar = QLineEdit()
+        self.search_bar = SassySearchBar()
         self.search_bar.setPlaceholderText("🔎 Search location...")
         self.search_bar.setFixedHeight(40)
         self.search_bar.setStyleSheet("""
@@ -242,8 +262,16 @@ class MainWindow(QWidget):
             }
         """)
         self.search_bar.returnPressed.connect(self.search_weather)
-        
+
+        # Search bar sass tracking
+        self.search_click_count = 0
+        self.search_click_timer = QTimer()
+        self.search_click_timer.timeout.connect(self.reset_search_click_count)
+        self.original_placeholder = self.search_bar.placeholderText()
+        # Connect click signal
+        self.search_bar.clicked.connect(self.on_search_bar_clicked)
         # Track for developer mode
+
         self.dev_mode_active = False
 
         search_layout.addWidget(self.search_bar)
@@ -850,11 +878,6 @@ class MainWindow(QWidget):
         if not city:
             return
         
-        # Check for Australian cities to flip display
-        australian_cities = ["sydney", "melbourne", "brisbane", "perth", "adelaide", "canberra", "hobart", "darwin"]
-        if any(aus_city in city.lower() for aus_city in australian_cities):
-            QTimer.singleShot(100, self.activate_australian_mode)
-        
         # Check for developer mode secret code
         if city.lower() == "dev.weather.debug.mode.enable":
             self.open_developer_settings()
@@ -874,7 +897,9 @@ class MainWindow(QWidget):
             self.add_city_to_sidebar(city)
             
             # Fetch current weather
+            # Fetch current weather
             current_worker = WeatherWorker(self.weather_api, city, "current")
+            
             current_worker.finished.connect(self.update_current_weather)
             current_worker.error.connect(self.show_error)
             current_worker.start()
@@ -988,81 +1013,6 @@ class MainWindow(QWidget):
         # Clear search bar
         self.search_bar.clear()
 
-    def activate_australian_mode(self):
-        """Flip the UI upside down for Australian cities"""
-        if not hasattr(self, 'australian_mode_active'):
-            self.australian_mode_active = False
-        
-        if not self.australian_mode_active:
-            # Rotate the scroll area content
-            from PyQt5.QtWidgets import QGraphicsRotation
-            rotation = QPropertyAnimation(self.scroll_area, b"rotation")
-            rotation.setDuration(1000)
-            rotation.setStartValue(0)
-            rotation.setEndValue(180)
-            rotation.setEasingCurve(QEasingCurve.InOutCubic)
-            
-            # Store animation
-            self.aussie_animation = rotation
-            
-            # Apply CSS transform instead
-            self.scroll_area.setStyleSheet(self.scroll_area.styleSheet() + """
-                QScrollArea {
-                    transform: rotate(180deg);
-                }
-            """)
-            
-            self.australian_mode_active = True
-            
-            # Show message
-            from PyQt5.QtWidgets import QLabel
-            aussie_msg = QLabel("🙃 G'day mate! Flipped for Australia!", self)
-            aussie_msg.setStyleSheet("""
-                background-color: rgba(255, 165, 0, 220);
-                color: white;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-size: 16px;
-                font-weight: bold;
-            """)
-            aussie_msg.setAlignment(Qt.AlignCenter)
-            aussie_msg.adjustSize()
-            aussie_msg.move(
-                (self.width() - aussie_msg.width()) // 2,
-                100
-            )
-            aussie_msg.show()
-            aussie_msg.raise_()
-            
-            # Remove message and flip after 5 seconds
-            QTimer.singleShot(5000, aussie_msg.deleteLater)
-            QTimer.singleShot(5000, self.deactivate_australian_mode)
-    
-    def deactivate_australian_mode(self):
-        """Disable Australian mode"""
-        if hasattr(self, 'australian_mode_active') and self.australian_mode_active:
-            # Reset stylesheet
-            self.scroll_area.setStyleSheet("""
-                QScrollArea {
-                    border: none;
-                    background: transparent;
-                }
-                QScrollBar:vertical {
-                    background: #111;
-                    width: 10px;
-                    border-radius: 5px;
-                }
-                QScrollBar::handle:vertical {
-                    background: #333;
-                    border-radius: 5px;
-                    min-height: 30px;
-                }
-                QScrollBar::handle:vertical:hover {
-                    background: #444;
-                }
-            """)
-            self.australian_mode_active = False
-
     
     def open_developer_settings(self):
         """Open developer settings easter egg"""
@@ -1143,8 +1093,6 @@ class MainWindow(QWidget):
             easter_eggs_found += 1
         if hasattr(self, 'channel_42_found') and self.channel_42_found:
             easter_eggs_found += 1
-        if hasattr(self, 'australian_mode_active'):
-            easter_eggs_found += 1
             
         # Get refresh interval setting
         refresh_interval = self.settings.get("refresh_interval", "manual")
@@ -1204,7 +1152,6 @@ class MainWindow(QWidget):
     ├─ Konami Code: {'✓' if hasattr(self, 'konami_sequence') else '✗'}
     ├─ Developer Mode: ✓ (You're here!)
     ├─ Channel 42: {'✓' if hasattr(self, 'channel_42_found') else '✗'}
-    ├─ Australian Mode: {'✓' if hasattr(self, 'australian_mode_active') else '✗'}
     ├─ Dad Jokes: {'✓' if any(hasattr(card, 'click_count') for card in self.city_cards.values()) else '✗'}
     ├─ Refresh Spam: {'✓' if hasattr(self, 'refresh_click_count') else '✗'}
     ├─ Search Sass: {'✓' if hasattr(self, 'search_click_count') else '✗'}
@@ -1252,6 +1199,59 @@ class MainWindow(QWidget):
             
         # Mark as found
         self.dev_mode_active = True
+
+    def on_search_bar_clicked(self):
+        """Handle search bar clicks for sass easter egg"""
+        # Only count if search bar is empty
+        if not self.search_bar.text().strip():
+            self.search_click_count += 1
+            
+            # Restart timer (3 seconds to reset)
+            self.search_click_timer.stop()
+            self.search_click_timer.start(3000)
+                        
+            if self.search_click_count >= 5:
+                self.show_search_bar_sass()
+    
+    def show_search_bar_sass(self):
+        """Show sassy placeholder text"""
+        sassy_messages = [
+            "I'm waiting... 🙄",
+            "Hello? Anyone there? 👋",
+            "Type something already! ⌨️",
+            "This is awkward... 😬",
+            "Still waiting... ⏰",
+            "Are you okay? 🤔",
+            "Looking for something? 👀",
+            "Don't be shy, type a city! 🌍",
+            "You know you want to... 😏",
+            "Is typing hard? Let me help! 🖊️",
+            "C'mon, give me a city! 🏙️",
+            "I'm not just decoration! 🎨",
+            "Wow, someone's impatient today! 😤",
+            "Keep shredding bro. 🔥",
+            "Why'd you choose violence? 😈",
+            "Deleting search_bar.exe...🗑️"
+        ]
+        
+        import random
+        sassy_text = random.choice(sassy_messages)
+        self.search_bar.setPlaceholderText(sassy_text)
+        
+        # Reset click count
+        self.search_click_count = 0
+        
+        # Reset placeholder after 5 seconds
+        QTimer.singleShot(5000, self.reset_search_placeholder)
+    
+    def reset_search_placeholder(self):
+        """Reset search bar placeholder to original"""
+        self.search_bar.setPlaceholderText(self.original_placeholder)
+    
+    def reset_search_click_count(self):
+        """Reset search click counter"""
+        self.search_click_count = 0
+        self.search_click_timer.stop()
 
     def show_channel_42(self):
         """Show Channel 42 secret weather channel"""
@@ -1705,7 +1705,7 @@ class MainWindow(QWidget):
         # Update background based on weather using weather ID
         weather_id = data.get('id', 800)
         self.update_background(weather_id)
-
+        
     def update_background(self, weather_id):
         """Update background image based on OpenWeatherMap weather ID"""
         # Map OpenWeatherMap weather IDs to background images
