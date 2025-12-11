@@ -3,5 +3,7 @@
   "wind_unit": "imperial",
   "auto_refresh": true,
   "default_city": "Bangalore",
-  "news_count": "5"
+  "news_count": "5",
+  "refresh_interval": "manual",
+  "notifs": "hi"
 }

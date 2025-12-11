@@ -35,8 +35,7 @@ class SettingsPage(QWidget):
         top_bar = QFrame()
         top_bar.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1a1a1a, stop:1 #1f1f1f);
+                background: #111;
                 border-bottom: 1px solid #2a2a2a;
             }
         """)
@@ -45,45 +44,43 @@ class SettingsPage(QWidget):
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(30, 20, 30, 20)
         
-        back_btn = QPushButton("← Back")
-        back_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        back_btn.setFixedSize(120, 45)
-        back_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2d2d2d, stop:1 #262626);
-                color: white;
-                border: 1px solid #3a3a3a;
-                border-radius: 12px;
-                font-size: 16px;
-                font-weight: 600;
-                padding: 0 20px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #353535, stop:1 #2e2e2e);
-                border: 1px solid #444;
-            }
-            QPushButton:pressed {
-                background: #222;
-            }
-        """)
-        back_btn.clicked.connect(self.on_back_clicked)
-        
-        # Settings title in top bar
-        settings_title = QLabel("⚙️  Settings")
-        settings_title.setStyleSheet("""
-            font-size: 26px; 
+
+        # Preferences Section Header
+        prefs_header = QLabel("🎛️  Preferences")
+        prefs_header.setStyleSheet("""
+            font-size: 32px; 
             font-weight: bold; 
             color: white;
             border: none;
-            background: none;
-            padding-left: 20px;
+            margin-bottom: 0px;
+            letter-spacing: -0.5px;
         """)
-        
-        top_layout.addWidget(back_btn)
-        top_layout.addWidget(settings_title)
-        top_layout.addStretch()
+
+         # Done button at top right
+        done_btn = QPushButton("✅ Done")
+        done_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        done_btn.setFixedSize(140, 50)
+        done_btn.setStyleSheet("""
+            QPushButton {
+                background: #1f1f1f;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                margin-bottom: 5px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: #2d2d2d;
+            }
+        """)        
+
+        done_btn.clicked.connect(self.on_back_clicked)
+        top_layout.addStretch(1)
+        top_layout.addWidget(prefs_header)
+        top_layout.addStretch(50)
+        top_layout.addWidget(done_btn)
+        top_layout.addStretch(2)
         
         main_layout.addWidget(top_bar)
         
@@ -101,19 +98,6 @@ class SettingsPage(QWidget):
                 border-radius: 6px;
                 margin: 2px;
             }
-            QScrollBar::handle:vertical {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3a3a3a, stop:1 #444);
-                border-radius: 6px;
-                min-height: 30px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #454545, stop:1 #4a4a4a);
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
         """)
         
         scroll_content = QWidget()
@@ -122,54 +106,7 @@ class SettingsPage(QWidget):
         layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(50, 40, 50, 50)
         layout.setSpacing(35)
-        
-        # Top row with header and Done button
-        top_row = QHBoxLayout()
-        top_row.setSpacing(20)
-        
-        # Preferences Section Header
-        prefs_header = QLabel("🎛️  Preferences")
-        prefs_header.setStyleSheet("""
-            font-size: 32px; 
-            font-weight: bold; 
-            color: white;
-            border: none;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-        """)
-        
-        top_row.addWidget(prefs_header)
-        top_row.addStretch()
-        
-        # Done button at top right
-        done_btn = QPushButton("✓  Done")
-        done_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        done_btn.setFixedSize(140, 50)
-        done_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #4a8fff, stop:0.5 #5ba3ff, stop:1 #6db5ff);
-                color: white;
-                border: none;
-                border-radius: 12px;
-                font-size: 17px;
-                font-weight: 700;
-                letter-spacing: 0.5px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #5b9fff, stop:0.5 #6cb3ff, stop:1 #7dc5ff);
-            }
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3978ee, stop:0.5 #4a92ee, stop:1 #5ca4ee);
-            }
-        """)
-        done_btn.clicked.connect(self.on_back_clicked)
-        
-        top_row.addWidget(done_btn)
-        layout.addLayout(top_row)
-        
+
         # Grid container for settings cards
         grid_container = QWidget()
         grid_container.setStyleSheet("background: transparent;")
@@ -205,49 +142,138 @@ class SettingsPage(QWidget):
             "default_city"
         )
         
-        # Add refresh interval card
         self.refresh_card = self.create_setting_card(
-            "🔄  Auto-Refresh Interval",
+            "🔄 Auto-Refresh Interval",
             "How often to update weather data automatically",
             [("Manual only", "manual"), ("Every 15 minutes", "15"), ("Every 30 minutes", "30"), ("Every hour", "60")],
             "refresh_interval"
         )
-        
-        # Add cards to grid (2 columns)
-        grid_layout.addWidget(self.temp_card, 0, 0)
-        grid_layout.addWidget(self.wind_card, 0, 1)
-        grid_layout.addWidget(self.news_card, 1, 0)
-        grid_layout.addWidget(self.default_city_card, 1, 1)
-        grid_layout.addWidget(self.refresh_card, 2, 0)
 
+        self.pressure_card = self.create_setting_card(
+            "� pressure Unit",
+            "Choose your preferred pressure measurement",
+            [("Hectopascal (hPa)", "hpa"), ("Inches of Mercury (inHg)", "inhg")],
+            "pressure_unit"
+        )
+
+        self.sunrise_sunset_card = self.create_setting_card(
+            "🌅 Sunrise/Sunset Time Format",
+            "Choose your preferred time format for sunrise and sunset",
+            [("24-hour format", "24h"), ("12-hour format (AM/PM)", "12h")],
+            "time_format"
+        )
+
+        self.location_services_card = self.create_setting_card(
+            "📍 Location Services",
+            "Enable or disable location services for automatic city detection",
+            [("Enable Location Services", "enabled"), ("Disable Location Services", "disabled")],
+            "location_services"
+        )
+
+        self.precipitation_card = self.create_setting_card(
+            "🌧️ Precipitation Unit",
+            "Choose your preferred precipitation measurement",
+            [("Millimeters (mm)", "mm"), ("Inches (in)", "in")],
+            "precipitation_unit"
+        )
+
+        self.delete_all_cities_card = self.create_setting_card(
+            "🗑️ Delete All Saved Cities",
+            "Remove all saved cities from the application",
+            [("Delete All Cities", "delete")],
+            "delete_all_cities"
+        )
+        self.notifications_card = self.create_setting_card(
+            "🔔 Manage notifications",
+            "Choose your preferred notifications settings",
+            [("High priority", "hi"), ("Default", "mid"), ("Turn off notifications", "off")],
+            "notifs"
+        )
         
-        layout.addWidget(grid_container)
-        
+        # ---------------------------
+        # GRID CONTAINER FOR UNITS
+        # ---------------------------
+        units_container = QWidget()
+        units_container.setStyleSheet("background: transparent;")
+        units_grid = QGridLayout(units_container)
+        units_grid.setSpacing(20)
+        units_grid.setContentsMargins(0, 0, 0, 0)
+
+        # Units cards
+        units_grid.addWidget(self.temp_card, 0, 0)
+        units_grid.addWidget(self.wind_card, 0, 1)
+        units_grid.addWidget(self.pressure_card, 1, 0)
+        units_grid.addWidget(self.precipitation_card, 1, 1)
+
+        # Units header
+        u_and_m_section = QLabel("🌡️ Units & Measurements")
+        u_and_m_section.setStyleSheet("""
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0px;
+            letter-spacing: -0.5px;
+        """)
+        layout.addWidget(u_and_m_section)
+        layout.addWidget(units_container)
+
+        # ---------------------------
+        # GRID CONTAINER FOR APP SETTINGS
+        # ---------------------------
+        app_container = QWidget()
+        app_container.setStyleSheet("background: transparent;")
+        app_grid = QGridLayout(app_container)
+        app_grid.setSpacing(20)
+        app_grid.setContentsMargins(0, 0, 0, 0)
+
+        # App setting cards
+        app_grid.addWidget(self.default_city_card,     0, 0)
+        app_grid.addWidget(self.refresh_card,          0, 1)
+        app_grid.addWidget(self.news_card,             1, 0)
+        app_grid.addWidget(self.notifications_card    ,1, 1)
+
+        # App settings header
+        a_s_section = QLabel("🛠️ App Settings")
+        a_s_section.setStyleSheet("""
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0px;
+            letter-spacing: -0.5px;
+        """)
+        layout.addWidget(a_s_section)
+        layout.addWidget(app_container)
+
         layout.addSpacing(20)
-        
-        # Decorative divider
-        divider_container = QFrame()
-        divider_container.setStyleSheet("background: transparent;")
-        divider_layout = QHBoxLayout(divider_container)
-        divider_layout.setContentsMargins(0, 20, 0, 20)
-        
-        left_line = QFrame()
-        left_line.setFrameShape(QFrame.HLine)
-        left_line.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 transparent, stop:1 #333); max-height: 1px;")
-        
-        divider_icon = QLabel("✦")
-        divider_icon.setStyleSheet("color: #555; font-size: 14px; padding: 0 15px;")
-        
-        right_line = QFrame()
-        right_line.setFrameShape(QFrame.HLine)
-        right_line.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #333, stop:1 transparent); max-height: 1px;")
-        
-        divider_layout.addWidget(left_line)
-        divider_layout.addWidget(divider_icon)
-        divider_layout.addWidget(right_line)
 
         
-        layout.addWidget(divider_container)
+        # ---------------------------
+        # GRID CONTAINER FOR DATA MANAGEMENT
+        # ---------------------------
+        data_container = QWidget()
+        data_container.setStyleSheet("background: transparent;")
+        data_grid = QGridLayout(data_container)
+        data_grid.setSpacing(20)
+        data_grid.setContentsMargins(0, 0, 0, 0)
+
+        # Data management cards
+        data_grid.addWidget(self.location_services_card, 0, 0)
+        data_grid.addWidget(self.delete_all_cities_card, 0, 1)
+
+        # Data Management header
+        d_m_section = QLabel("📦 Data Management")
+        d_m_section.setStyleSheet("""
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0px;
+            letter-spacing: -0.5px;
+        """)
+        layout.addWidget(d_m_section)
+        layout.addWidget(data_container)
+
+        layout.addSpacing(20)
+
         
         # About Section
         about_label = QLabel("ℹ️  About Weatherly")
@@ -265,8 +291,7 @@ class SettingsPage(QWidget):
         about_frame = QFrame()
         about_frame.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                background: #111;
                 border: none;
                 padding: 30px;
             }
@@ -280,7 +305,6 @@ class SettingsPage(QWidget):
             font-weight: bold; 
             color: white; 
             background: none;
-            letter-spacing: -0.5px;
         """)
         
         description = QLabel("Want to contribute explore the code or contribute? Check out the project on GitHub! Feel free to open issues or submit pull requests. Your feedback and contributions are welcome!")
@@ -298,8 +322,7 @@ class SettingsPage(QWidget):
         github_btn.setFixedHeight(55)
         github_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2d2d2d, stop:1 #262626);
+                background: #262626;
                 color: white;
                 border: 1px solid #3a3a3a;
                 border-radius: 14px;
@@ -308,12 +331,8 @@ class SettingsPage(QWidget):
                 font-weight: 600;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #353535, stop:1 #2e2e2e);
+                background: #2e2e2e;
                 border: 1px solid #444;
-            }
-            QPushButton:pressed {
-                background: #222;
             }
         """)
         github_btn.clicked.connect(lambda: QDesktopServices.openUrl(
@@ -348,8 +367,7 @@ class SettingsPage(QWidget):
         clear_cities_btn.setFixedHeight(60)
         clear_cities_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #d64545, stop:0.5 #e85555, stop:1 #ff6565);
+                background: #ff6565;
                 color: white;
                 border: none;
                 border-radius: 16px;
@@ -358,12 +376,10 @@ class SettingsPage(QWidget):
                 letter-spacing: 0.5px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #e05555, stop:0.5 #f26565, stop:1 #ff7575);
+                background: #ff7575;
             }
             QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #c53535, stop:0.5 #d74545, stop:1 #ee5555);
+                background: #ee5555;
             }
         """)
         clear_cities_btn.clicked.connect(self.clear_all_cities)
@@ -382,8 +398,7 @@ class SettingsPage(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                background: #1a1a1a;
                 border: 1px solid #2a2a2a;
                 border-radius: 20px;
             }
@@ -452,8 +467,7 @@ class SettingsPage(QWidget):
                     background-color: #1a1a1a;
                 }
                 QRadioButton::indicator:checked {
-                    background: qradialgradient(cx:0.5, cy:0.5, radius:0.5,
-                        fx:0.5, fy:0.5, stop:0 #6db5ff, stop:0.6 #5ba3ff, stop:1 #4a8fff);
+                    background: #4a8fff;
                     border-color: #5ba3ff;
                 }
                 QRadioButton::indicator:hover {
@@ -481,8 +495,7 @@ class SettingsPage(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                background: #1a1a1a;
                 border: 1px solid #2a2a2a;
                 border-radius: 20px;
             }
@@ -619,12 +632,11 @@ class SettingsPage(QWidget):
         container_layout.addWidget(section_label)
         container_layout.addWidget(desc_label)
         
-        # Options frame with gradient
+        # Options frame 
         section_frame = QFrame()
         section_frame.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1e1e1e, stop:1 #1a1a1a);
+                background: #1a1a1a;
                 border: 1px solid #2a2a2a;
                 border-radius: 18px;
                 padding: 8px;
@@ -670,8 +682,7 @@ class SettingsPage(QWidget):
                     background-color: #1a1a1a;
                 }
                 QRadioButton::indicator:checked {
-                    background: qradialgradient(cx:0.5, cy:0.5, radius:0.5,
-                        fx:0.5, fy:0.5, stop:0 #6db5ff, stop:0.6 #5ba3ff, stop:1 #4a8fff);
+                    background: #4a8fff;
                     border-color: #5ba3ff;
                 }
 
@@ -705,13 +716,13 @@ class SettingsPage(QWidget):
         """Save settings and emit signal"""
         self.settings_changed.emit(self.settings)
         self.back_clicked.emit()
-    
-    def on_back_clicked(self):
-        """Handle back button click"""
-        # Emit one final settings_changed to ensure everything is saved
-        self.settings_changed.emit(self.settings)
-        self.back_clicked.emit()
 
     def get_settings(self):
         """Return current settings"""
         return self.settings
+    
+    def on_back_clicked(self):
+        """Handle back/done button click"""
+        # Emit one final settings_changed to ensure everything is saved
+        self.settings_changed.emit(self.settings)
+        self.back_clicked.emit()
