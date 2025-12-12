@@ -156,7 +156,7 @@ class SettingsPage(QWidget):
         )
 
         self.pressure_card = self.create_setting_card(
-            "� pressure Unit",
+            "📉 Pressure Unit",
             "Choose your preferred pressure measurement",
             [("Hectopascal (hPa)", "hpa"), ("Inches of Mercury (inHg)", "inhg")],
             "pressure_unit"
@@ -214,7 +214,7 @@ class SettingsPage(QWidget):
 
         clear_title = QLabel("🗑️ Clear All Saved Cities")
         clear_title.setStyleSheet("""
-            font-size: 20px; 
+            font-size: 24px; 
             font-weight: 600; 
             color: white;
             border: none;
@@ -224,7 +224,7 @@ class SettingsPage(QWidget):
 
         clear_desc = QLabel("Remove all saved cities from the application")
         clear_desc.setStyleSheet("""
-            font-size: 13px;
+            font-size: 16px;
             color: #888;
             border: none;
             background: none;
@@ -241,8 +241,8 @@ class SettingsPage(QWidget):
                 color: white;
                 border: none;
                 border-radius: 12px;
-                font-size: 16px;
-                font-weight: 700;
+                font-size: 20px;
+                font-weight: bold;
             }
             QPushButton:hover {
                 background: #ff7575;
@@ -450,7 +450,7 @@ class SettingsPage(QWidget):
         # Title
         title_label = QLabel(title)
         title_label.setStyleSheet("""
-            font-size: 20px; 
+            font-size: 24px; 
             font-weight: 600; 
             color: white;
             border: none;
@@ -461,7 +461,7 @@ class SettingsPage(QWidget):
         # Description
         desc_label = QLabel(description)
         desc_label.setStyleSheet("""
-            font-size: 13px;
+            font-size: 16px;
             color: #888;
             border: none;
             background: none;
@@ -492,7 +492,7 @@ class SettingsPage(QWidget):
             radio.setStyleSheet("""
                 QRadioButton {
                     color: white;
-                    font-size: 15px;
+                    font-size: 16px;
                     background: transparent;
                     spacing: 12px;
                     font-weight: 500;
@@ -547,7 +547,7 @@ class SettingsPage(QWidget):
         # Title
         title_label = QLabel(title)
         title_label.setStyleSheet("""
-            font-size: 20px; 
+            font-size: 24px; 
             font-weight: 600; 
             border: none;
             color: white;
@@ -558,7 +558,7 @@ class SettingsPage(QWidget):
         # Description
         desc_label = QLabel(description)
         desc_label.setStyleSheet("""
-            font-size: 13px;
+            font-size: 16px;
             color: #888;
             border: none;
             background: none;
@@ -580,7 +580,7 @@ class SettingsPage(QWidget):
                 border-radius: 12px;
                 padding: 15px;
                 color: white;
-                font-size: 15px;
+                font-size: 16px;
                 font-weight: 500;
             }
             QLineEdit:focus {

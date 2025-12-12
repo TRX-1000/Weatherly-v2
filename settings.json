@@ -1,11 +1,12 @@
 {
   "temperature_unit": "fahrenheit",
-  "wind_unit": "imperial",
+  "wind_unit": "metric",
   "auto_refresh": true,
   "default_city": "Bangalore",
   "news_count": "5",
   "refresh_interval": "manual",
   "notifs": "hi",
   "delete_all_cities": "delete",
-  "sidebar_default": "expanded"
+  "sidebar_default": "expanded",
+  "time_format": "12h"
 }

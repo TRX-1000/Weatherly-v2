@@ -609,26 +609,26 @@ class MainWindow(QWidget):
         current_layout.setSpacing(15)
 
         self.city_label = QLabel("Select a city to view weather")
-        self.city_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; background: none;")
+        self.city_label.setStyleSheet("font-size: 45px; font-weight: bold; color: white; background: none;")
         
         self.temp_label = QLabel("--°C")
-        self.temp_label.setStyleSheet("font-size: 82px; font-weight: bold; color: white; background: none;")
+        self.temp_label.setStyleSheet("font-size: 120px; font-weight: bold; color: white; background: none;")
         
         self.description_label = QLabel("--")
-        self.description_label.setStyleSheet("font-size: 22px; color: #fff; background: none;")
+        self.description_label.setStyleSheet("font-size: 32px; font-weight: bold; color: #fff; background: none;")
         
         # Main details row (feels like, humidity, wind)
         main_details_layout = QHBoxLayout()
-        main_details_layout.setSpacing(40)
+        main_details_layout.setSpacing(30)
         
         self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
+        self.feels_like_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
+        self.humidity_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 17px; color: #ffffff; background: none;")
+        self.wind_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         main_details_layout.addWidget(self.feels_like_label)
         main_details_layout.addWidget(self.humidity_label)
@@ -637,22 +637,27 @@ class MainWindow(QWidget):
         
         # Additional details row (pressure, visibility, clouds, UV)
         additional_details_layout = QHBoxLayout()
-        additional_details_layout.setSpacing(40)
+        additional_details_layout.setSpacing(30)
         
         self.pressure_label = QLabel("Pressure: -- hPa")
-        self.pressure_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        self.pressure_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         self.clouds_label = QLabel("Clouds: --%")
-        self.clouds_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        self.clouds_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
+
+        self.precipitation_label = QLabel("Precipitation: -- mm")
+        self.precipitation_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         self.sunrise_label = QLabel("Sunrise: --:--")
-        self.sunrise_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        self.sunrise_label.setStyleSheet("font-size: 23px; font-weight: bold; color: #ffffff; background: none;")
         
         self.sunset_label = QLabel("Sunset: --:--")
-        self.sunset_label.setStyleSheet("font-size: 16px; color: #cccccc; background: none;")
+        self.sunset_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
         
         additional_details_layout.addWidget(self.pressure_label)
         additional_details_layout.addWidget(self.clouds_label)
+        additional_details_layout.addWidget(self.precipitation_label)
+
         additional_details_layout.addWidget(self.sunrise_label)
         additional_details_layout.addWidget(self.sunset_label)
         additional_details_layout.addStretch()
@@ -660,6 +665,7 @@ class MainWindow(QWidget):
         current_layout.addWidget(self.city_label)
         current_layout.addWidget(self.temp_label)
         current_layout.addWidget(self.description_label)
+        current_layout.addSpacing(25)
         current_layout.addLayout(main_details_layout)
         current_layout.addLayout(additional_details_layout)
         
