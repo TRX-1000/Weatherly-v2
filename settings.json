@@ -5,5 +5,7 @@
   "default_city": "Bangalore",
   "news_count": "5",
   "refresh_interval": "manual",
-  "notifs": "hi"
+  "notifs": "hi",
+  "delete_all_cities": "delete",
+  "sidebar_default": "expanded"
 }

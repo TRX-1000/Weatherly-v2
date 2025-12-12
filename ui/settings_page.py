@@ -21,7 +21,13 @@ class SettingsPage(QWidget):
             "auto_refresh": True,
             "default_city": "",
             "news_count": "10",
-            "refresh_interval": "manual"
+            "refresh_interval": "manual",
+            "sidebar_default": "remember",
+            "notifs": "hi",
+            "pressure_unit": "hpa",
+            "time_format": "24h",
+            "location_services": "enabled",
+            "precipitation_unit": "mm"
         }
         
         self.setStyleSheet("background-color: #111;")
@@ -46,7 +52,7 @@ class SettingsPage(QWidget):
         
 
         # Preferences Section Header
-        prefs_header = QLabel("🎛️  Preferences")
+        prefs_header = QLabel("🎛️ Preferences")
         prefs_header.setStyleSheet("""
             font-size: 32px; 
             font-weight: bold; 
@@ -177,19 +183,80 @@ class SettingsPage(QWidget):
             "precipitation_unit"
         )
 
-        self.delete_all_cities_card = self.create_setting_card(
-            "🗑️ Delete All Saved Cities",
-            "Remove all saved cities from the application",
-            [("Delete All Cities", "delete")],
-            "delete_all_cities"
-        )
         self.notifications_card = self.create_setting_card(
             "🔔 Manage notifications",
             "Choose your preferred notifications settings",
             [("High priority", "hi"), ("Default", "mid"), ("Turn off notifications", "off")],
             "notifs"
         )
-        
+
+        self.sidebar_state_card = self.create_setting_card(
+        "📌 Sidebar on Startup",
+        "Choose the default sidebar state when app opens",
+        [("Always expanded", "expanded"), ("Always collapsed", "collapsed"), ("Remember last state", "remember")],
+        "sidebar_default"
+        )
+
+        # Clear Cities Card - with button instead of radio
+        self.clear_cities_card = QFrame()
+        self.clear_cities_card.setStyleSheet("""
+            QFrame {
+                background: #1a1a1a;
+                border: 1px solid #2a2a2a;
+                border-radius: 20px;
+            }
+        """)
+        self.clear_cities_card.setMinimumHeight(280)
+
+        clear_card_layout = QVBoxLayout(self.clear_cities_card)
+        clear_card_layout.setContentsMargins(25, 25, 25, 25)
+        clear_card_layout.setSpacing(15)
+
+        clear_title = QLabel("🗑️ Clear All Saved Cities")
+        clear_title.setStyleSheet("""
+            font-size: 20px; 
+            font-weight: 600; 
+            color: white;
+            border: none;
+            letter-spacing: -0.3px;
+            background: none;
+        """)
+
+        clear_desc = QLabel("Remove all saved cities from the application")
+        clear_desc.setStyleSheet("""
+            font-size: 13px;
+            color: #888;
+            border: none;
+            background: none;
+            margin-bottom: 10px;
+        """)
+        clear_desc.setWordWrap(True)
+
+        clear_btn = QPushButton("Clear All Cities")
+        clear_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        clear_btn.setFixedHeight(50)
+        clear_btn.setStyleSheet("""
+            QPushButton {
+                background: #ff6565;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            QPushButton:hover {
+                background: #ff7575;
+            }
+            QPushButton:pressed {
+                background: #ee5555;
+            }
+        """)
+        clear_btn.clicked.connect(self.clear_all_cities)
+
+        clear_card_layout.addWidget(clear_title)
+        clear_card_layout.addWidget(clear_desc)
+        clear_card_layout.addWidget(clear_btn)
+        clear_card_layout.addStretch()
         # ---------------------------
         # GRID CONTAINER FOR UNITS
         # ---------------------------
@@ -204,6 +271,9 @@ class SettingsPage(QWidget):
         units_grid.addWidget(self.wind_card, 0, 1)
         units_grid.addWidget(self.pressure_card, 1, 0)
         units_grid.addWidget(self.precipitation_card, 1, 1)
+
+        units_grid.setColumnStretch(0, 1)
+        units_grid.setColumnStretch(1, 1)
 
         # Units header
         u_and_m_section = QLabel("🌡️ Units & Measurements")
@@ -230,7 +300,13 @@ class SettingsPage(QWidget):
         app_grid.addWidget(self.default_city_card,     0, 0)
         app_grid.addWidget(self.refresh_card,          0, 1)
         app_grid.addWidget(self.news_card,             1, 0)
-        app_grid.addWidget(self.notifications_card    ,1, 1)
+        app_grid.addWidget(self.notifications_card,    1, 1)
+        app_grid.addWidget(self.sunrise_sunset_card,   2, 0)
+        app_grid.addWidget(self.sidebar_state_card,    2, 1)
+
+        app_grid.setColumnStretch(0, 1)
+        app_grid.setColumnStretch(1, 1)
+        
 
         # App settings header
         a_s_section = QLabel("🛠️ App Settings")
@@ -258,7 +334,10 @@ class SettingsPage(QWidget):
 
         # Data management cards
         data_grid.addWidget(self.location_services_card, 0, 0)
-        data_grid.addWidget(self.delete_all_cities_card, 0, 1)
+        data_grid.addWidget(self.clear_cities_card, 0, 1)
+
+        data_grid.setColumnStretch(0, 1)
+        data_grid.setColumnStretch(1, 1)
 
         # Data Management header
         d_m_section = QLabel("📦 Data Management")
@@ -347,47 +426,6 @@ class SettingsPage(QWidget):
         layout.addWidget(about_frame)
         
         layout.addSpacing(20)
-        
-        # Data Management Section
-        data_header = QLabel("🗂️ Data Management")
-        data_header.setStyleSheet("""
-            font-size: 32px; 
-            font-weight: bold; 
-            color: white;
-            border: none;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-        """)
-        layout.addWidget(data_header)
-        
-        # Clear Cities Button
-        clear_cities_btn = QPushButton("🗑️  Clear All Saved Cities")
-        clear_cities_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        clear_cities_btn.setFixedHeight(60)
-        clear_cities_btn.setStyleSheet("""
-            QPushButton {
-                background: #ff6565;
-                color: white;
-                border: none;
-                border-radius: 16px;
-                font-size: 18px;
-                font-weight: 700;
-                letter-spacing: 0.5px;
-            }
-            QPushButton:hover {
-                background: #ff7575;
-            }
-            QPushButton:pressed {
-                background: #ee5555;
-            }
-        """)
-        clear_cities_btn.clicked.connect(self.clear_all_cities)
-        
-        layout.addWidget(clear_cities_btn)
-        
-        layout.addStretch()
-        
         
         
         scroll_area.setWidget(scroll_content)
@@ -632,7 +670,7 @@ class SettingsPage(QWidget):
         container_layout.addWidget(section_label)
         container_layout.addWidget(desc_label)
         
-        # Options frame 
+        # Options frame  
         section_frame = QFrame()
         section_frame.setStyleSheet("""
             QFrame {
@@ -711,7 +749,7 @@ class SettingsPage(QWidget):
         """Update a setting value and immediately apply it"""
         self.settings[key] = value
         self.settings_changed.emit(self.settings)
-    
+
     def save_settings(self):
         """Save settings and emit signal"""
         self.settings_changed.emit(self.settings)

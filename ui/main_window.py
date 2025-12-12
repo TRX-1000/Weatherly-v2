@@ -488,6 +488,7 @@ class MainWindow(QWidget):
         self.floating_menu_button.raise_()
         self.settings_button.raise_()
         self.refresh_button.raise_()
+        self.location_button.raise_()
         self.scroll_area.raise_()
 
         # Animations
@@ -499,6 +500,9 @@ class MainWindow(QWidget):
         self.sidebar_max_anim = QPropertyAnimation(self.sidebar, b"maximumWidth")
         self.sidebar_max_anim.setDuration(250)
         self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)
+
+        # Apply sidebar setting after everything is initialized
+        self.apply_sidebar_setting()
 
         # Load default city or first saved city
         default_city = self.settings.get("default_city", "").strip()
@@ -1934,3 +1938,11 @@ class MainWindow(QWidget):
         self.sidebar_max_anim.setStartValue(self.sidebar.maximumWidth())
         self.sidebar_max_anim.setEndValue(self.sidebar_collapsed)
         self.sidebar_max_anim.start()
+
+    def apply_sidebar_setting(self):
+        """Apply the saved sidebar setting"""
+        sidebar_setting = self.settings.get("sidebar_default", "expanded")
+        
+        if sidebar_setting == "collapsed":
+            self.collapse_sidebar()
+        # If "expanded" or "remember", sidebar is already expanded by default
