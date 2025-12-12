@@ -141,12 +141,14 @@ class MainWindow(QWidget):
         self.setWindowTitle("Weatherly")
 
         # Apply platform-specific window settings
+        start_x = self.window_config.get_start_x()
+        start_y = self.window_config.get_start_y()
         width = self.window_config.get_width()
         height = self.window_config.get_height()
         min_width = self.window_config.get_min_width()
         min_height = self.window_config.get_min_height()
 
-        self.setGeometry(100, 100, width, height)
+        self.setGeometry(start_x, start_y, width, height)
         self.setMinimumSize(min_width, min_height)
         
 

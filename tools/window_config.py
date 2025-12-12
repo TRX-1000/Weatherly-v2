@@ -15,24 +15,23 @@ class WindowConfig:
         """Load window configuration from JSON file"""
         default_config = {
             "Darwin": {  # macOS
-                "width": 1340,
-                "height": 775,
-                "min_width": 1200,
-                "min_height": 700
+                "width": 1470,
+                "height": 810,
+                "min_width": 1470,
+                "min_height": 810,
+                "start_x": 0,
+                "start_y": 0
             },
             "Windows": {
                 "width": 1350,
                 "height": 725,
                 "min_width": 1350,
-                "min_height": 725
-            },
-            "Linux": {
-                "width": 1340,
-                "height": 775,
-                "min_width": 1200,
-                "min_height": 700
+                "min_height": 725,
+                "start_x": 100,
+                "start_y": 100
             }
         }
+        
         
         if os.path.exists(self.config_file):
             try:
@@ -79,6 +78,14 @@ class WindowConfig:
     def get_min_height(self):
         """Get minimum window height for current platform"""
         return self.get_current_platform_config()["min_height"]
+    
+    def get_start_x(self):
+        """Get starting X position for window on current platform"""
+        return self.get_current_platform_config().get("start_x", 0)
+    
+    def get_start_y(self):
+        """Get starting Y position for window on current platform"""
+        return self.get_current_platform_config().get("start_y", 0)
     
     def get_platform_name(self):
         """Get current platform name"""
