@@ -2,7 +2,7 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction, QGraphicsBlurEffect
+    QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction, QGraphicsBlurEffect, QGridLayout
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal, QTimer, QPoint
 from PyQt5.QtGui import QCursor, QPixmap
@@ -607,7 +607,7 @@ class MainWindow(QWidget):
         """)
         
         current_layout = QVBoxLayout(self.current_section)
-        current_layout.setContentsMargins(35, 35, 35, 35)
+        current_layout.setContentsMargins(0, 0, 0, 0)
         current_layout.setSpacing(15)
 
         self.city_label = QLabel("Select a city to view weather")
@@ -619,59 +619,109 @@ class MainWindow(QWidget):
         self.description_label = QLabel("--")
         self.description_label.setStyleSheet("font-size: 32px; font-weight: bold; color: #fff; background: none;")
         
-        # Main details row (feels like, humidity, wind)
-        main_details_layout = QHBoxLayout()
-        main_details_layout.setSpacing(30)
-        
-        self.feels_like_label = QLabel("Feels like: --°C")
-        self.feels_like_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        self.humidity_label = QLabel("Humidity: --%")
-        self.humidity_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        self.wind_label = QLabel("Wind: -- m/s")
-        self.wind_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        main_details_layout.addWidget(self.feels_like_label)
-        main_details_layout.addWidget(self.humidity_label)
-        main_details_layout.addWidget(self.wind_label)
-        main_details_layout.addStretch()
-        
-        # Additional details row (pressure, visibility, clouds, UV)
-        additional_details_layout = QHBoxLayout()
-        additional_details_layout.setSpacing(30)
-        
-        self.pressure_label = QLabel("Pressure: -- hPa")
-        self.pressure_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        self.clouds_label = QLabel("Clouds: --%")
-        self.clouds_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
 
-        self.precipitation_label = QLabel("Precipitation: -- mm")
-        self.precipitation_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        self.sunrise_label = QLabel("Sunrise: --:--")
-        self.sunrise_label.setStyleSheet("font-size: 23px; font-weight: bold; color: #ffffff; background: none;")
-        
-        self.sunset_label = QLabel("Sunset: --:--")
-        self.sunset_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; background: none;")
-        
-        additional_details_layout.addWidget(self.pressure_label)
-        additional_details_layout.addWidget(self.clouds_label)
-        additional_details_layout.addWidget(self.precipitation_label)
+        # Create info cards and add to grid
+        self.feels_like_card = self.create_info_card(" Feels Like", "--°C")
 
-        additional_details_layout.addWidget(self.sunrise_label)
-        additional_details_layout.addWidget(self.sunset_label)
-        additional_details_layout.addStretch()
-        
+        self.humidity_card = self.create_info_card(" Humidity", "--%")
+
+        self.wind_card = self.create_info_card(" Wind Speed", "-- km/h")
+
+        self.pressure_card = self.create_info_card(" Pressure", "-- hPa")
+
+        self.clouds_card = self.create_info_card(" Cloudiness", "--%")
+
+        self.precip_card = self.create_info_card(" Precipitation", "-- mm")
+
+        self.visibility_card = self.create_info_card(" Visibility", "-- km")
+
+        self.sunrise_card = self.create_info_card(" Sunrise", "--:--")
+
+        self.sunset_card = self.create_info_card(" Sunset", "--:--")
+
+        # Grid container for info cards
+        info_container = QWidget()
+        info_container.setStyleSheet("background: transparent;")
+        info_container.setMaximumWidth(1000)
+        info_grid = QGridLayout(info_container)
+        info_grid.setContentsMargins(0, 0, 0, 0)
+        info_grid.setVerticalSpacing(20)
+        info_grid.setHorizontalSpacing(30)
+
+        info_grid.addWidget(self.feels_like_card, 0, 0)
+        info_grid.addWidget(self.humidity_card, 0, 1)
+        info_grid.addWidget(self.wind_card, 0, 2)
+
+        info_grid.addWidget(self.pressure_card, 1, 0)
+        info_grid.addWidget(self.clouds_card, 1, 1)
+        info_grid.addWidget(self.visibility_card, 1, 2)
+
+        info_grid.addWidget(self.sunrise_card, 2, 0)
+        info_grid.addWidget(self.sunset_card, 2, 1)
+        info_grid.addWidget(self.precip_card, 2, 2)
+
+        """ info_grid.setColumnStretch(0, 1)
+        info_grid.setColumnStretch(1, 1)
+        info_grid.setColumnStretch(2, 1) """
+
+        current_layout.setAlignment(Qt.AlignCenter)
         current_layout.addWidget(self.city_label)
         current_layout.addWidget(self.temp_label)
         current_layout.addWidget(self.description_label)
-        current_layout.addSpacing(25)
-        current_layout.addLayout(main_details_layout)
-        current_layout.addLayout(additional_details_layout)
-        
+        current_layout.addSpacing(30)
+        current_layout.addWidget(info_container, alignment=Qt.AlignCenter)
+
         self.content_layout.addWidget(self.current_section)
+
+    def create_info_card(self, title, value):
+        card = QFrame()
+        card.setStyleSheet("""
+            QFrame {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                border-radius: 16px;
+            }
+        """)
+
+        card.setMinimumHeight(75)
+        card.setMaximumHeight(75)
+        card.setMinimumWidth(250)  # Reduced from 250
+        card.setMaximumWidth(250)  # Add this to limit growth
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(15, 10, 15, 10)
+        layout.setAlignment(Qt.AlignCenter)
+
+        title_label = QLabel(title)
+        title_label.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
+                font-size: 16px;
+                color: #ddd;
+            }
+        """)
+        title_label.setFrameStyle(QFrame.NoFrame)
+        title_label.setAlignment(Qt.AlignCenter)
+
+        value_label = QLabel(value)
+        value_label.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
+                font-size: 22px;
+                font-weight: bold;
+                color: white;
+            }
+        """)
+        value_label.setFrameStyle(QFrame.NoFrame)
+        value_label.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(title_label)
+        layout.addWidget(value_label)
+
+        card.value_label = value_label
+        return card
 
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
@@ -1699,20 +1749,15 @@ class MainWindow(QWidget):
         self.city_label.setText(f"{data['city']}, {data['country']}")
         self.temp_label.setText(self.format_temperature(data['temperature']))
         self.description_label.setText(data['description'].title())
-        self.feels_like_label.setText(f"Feels like: {self.format_temperature(data['feels_like'])}")
-        self.humidity_label.setText(f"Humidity: {data['humidity']}%")
-        self.wind_label.setText(f"Wind: {self.format_wind_speed(data['wind_speed'])}")
         
-        # Update additional weather data
-        self.pressure_label.setText(f"Pressure: {data['pressure']} hPa")
-        self.clouds_label.setText(f"Clouds: {data['clouds']}%")
+        
+        
         
         # Format sunrise/sunset times
         from datetime import datetime
         sunrise_time = datetime.fromtimestamp(data['sunrise'] + data['timezone']).strftime('%H:%M')
         sunset_time = datetime.fromtimestamp(data['sunset'] + data['timezone']).strftime('%H:%M')
-        self.sunrise_label.setText(f"🌅 Sunrise: {sunrise_time}")
-        self.sunset_label.setText(f"🌇 Sunset: {sunset_time}")
+        
         
         # Update background based on weather using weather ID
         weather_id = data.get('id', 800)

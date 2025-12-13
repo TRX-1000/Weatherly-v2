@@ -113,13 +113,6 @@ class SettingsPage(QWidget):
         layout.setContentsMargins(50, 40, 50, 50)
         layout.setSpacing(35)
 
-        # Grid container for settings cards
-        grid_container = QWidget()
-        grid_container.setStyleSheet("background: transparent;")
-        grid_layout = QGridLayout(grid_container)
-        grid_layout.setSpacing(20)
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        
         # Create cards and add to grid (2 columns)
         self.temp_card = self.create_setting_card(
             "🌡️ Temperature Unit",
@@ -538,7 +531,6 @@ class SettingsPage(QWidget):
                 border-radius: 20px;
             }
         """)
-        card.setMinimumHeight(280)
         
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(25, 25, 25, 25)
