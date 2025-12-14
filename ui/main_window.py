@@ -450,7 +450,7 @@ class MainWindow(QWidget):
         
         self.content_layout = QVBoxLayout(scroll_content)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
-        self.content_layout.setSpacing(20)
+        self.content_layout.setSpacing(50)
 
         # Current weather display
         self.create_current_weather_section()
@@ -612,12 +612,15 @@ class MainWindow(QWidget):
 
         self.city_label = QLabel("Select a city to view weather")
         self.city_label.setStyleSheet("font-size: 45px; font-weight: bold; color: white; background: none;")
+        self.city_label.setAlignment(Qt.AlignCenter)
         
         self.temp_label = QLabel("--°C")
         self.temp_label.setStyleSheet("font-size: 120px; font-weight: bold; color: white; background: none;")
+        self.temp_label.setAlignment(Qt.AlignCenter)
         
         self.description_label = QLabel("--")
         self.description_label.setStyleSheet("font-size: 32px; font-weight: bold; color: #fff; background: none;")
+        self.description_label.setAlignment(Qt.AlignCenter)
         
 
         # Create info cards and add to grid
@@ -646,7 +649,7 @@ class MainWindow(QWidget):
         info_grid = QGridLayout(info_container)
         info_grid.setContentsMargins(0, 0, 0, 0)
         info_grid.setVerticalSpacing(20)
-        info_grid.setHorizontalSpacing(30)
+        info_grid.setHorizontalSpacing(45)
 
         info_grid.addWidget(self.feels_like_card, 0, 0)
         info_grid.addWidget(self.humidity_card, 0, 1)
@@ -659,10 +662,6 @@ class MainWindow(QWidget):
         info_grid.addWidget(self.sunrise_card, 2, 0)
         info_grid.addWidget(self.sunset_card, 2, 1)
         info_grid.addWidget(self.precip_card, 2, 2)
-
-        """ info_grid.setColumnStretch(0, 1)
-        info_grid.setColumnStretch(1, 1)
-        info_grid.setColumnStretch(2, 1) """
 
         current_layout.setAlignment(Qt.AlignCenter)
         current_layout.addWidget(self.city_label)
@@ -683,10 +682,10 @@ class MainWindow(QWidget):
             }
         """)
 
-        card.setMinimumHeight(75)
-        card.setMaximumHeight(75)
-        card.setMinimumWidth(250)  # Reduced from 250
-        card.setMaximumWidth(250)  # Add this to limit growth
+        card.setMinimumHeight(85)
+        card.setMaximumHeight(85)
+        card.setMinimumWidth(260)  # Reduced from 250
+        card.setMaximumWidth(260)  # Add this to limit growth
 
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 10, 15, 10)
@@ -709,7 +708,7 @@ class MainWindow(QWidget):
             QLabel {
                 background: transparent;
                 border: none;
-                font-size: 22px;
+                font-size: 25px;
                 font-weight: bold;
                 color: white;
             }
@@ -726,8 +725,9 @@ class MainWindow(QWidget):
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
         forecast_header = QLabel("5-Day Forecast")
+        forecast_header.setContentsMargins(125, 0, 0, 0)
         forecast_header.setStyleSheet("""
-            font-size: 26px; 
+            font-size: 28px; 
             font-weight: bold; 
             color: white;
             padding-left: 5px;
@@ -735,10 +735,20 @@ class MainWindow(QWidget):
         self.content_layout.addWidget(forecast_header)
         
         self.forecast_container = QFrame()
-        self.forecast_container.setStyleSheet("background: transparent;")
+        self.forecast_container.setObjectName("forecastContainer")  # Give it a unique name
+
+        self.forecast_container.setStyleSheet("""
+                QFrame#forecastContainer {
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.18);
+                    border-radius: 16px;
+                }
+            """)       
+        
+        self.forecast_container.setMaximumWidth(1000)
         
         self.forecast_layout = QHBoxLayout(self.forecast_container)
-        self.forecast_layout.setSpacing(15)
+        self.forecast_layout.setSpacing(33)
         self.forecast_layout.setContentsMargins(0, 0, 0, 0)
         
         self.forecast_cards = []
@@ -746,8 +756,9 @@ class MainWindow(QWidget):
             card = self.create_forecast_card()
             self.forecast_cards.append(card)
             self.forecast_layout.addWidget(card)
+
         
-        self.content_layout.addWidget(self.forecast_container)
+        self.content_layout.addWidget(self.forecast_container, alignment=Qt.AlignCenter)
 
     def create_forecast_card(self):
         """Create a single forecast day card"""
@@ -758,7 +769,9 @@ class MainWindow(QWidget):
                 border-radius: 16px;
             }
         """)
-        card.setFixedSize(190, 220)
+        card.setMinimumWidth(148)  # (840px - 4 gaps × 30px) ÷ 5 cards = 148px per card
+        card.setMaximumWidth(148)
+        card.setFixedHeight(220)
         
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 20, 15, 20)
@@ -797,8 +810,9 @@ class MainWindow(QWidget):
     def create_news_section(self):
         """Create the news section"""
         news_header = QLabel("📰 Weather News")
+        news_header.setContentsMargins(125, 0, 0, 0)
         news_header.setStyleSheet("""
-            font-size: 26px; 
+            font-size: 28px; 
             font-weight: bold; 
             background: none;
             color: white;
@@ -809,10 +823,11 @@ class MainWindow(QWidget):
         
         self.news_container = QFrame()
         self.news_container.setStyleSheet("background: transparent;")
+        self.news_container.setMinimumWidth(1000)
         
         self.news_layout = QVBoxLayout(self.news_container)
         self.news_layout.setSpacing(15)
-        self.news_layout.setContentsMargins(0, 0, 0, 0)
+        self.news_layout.setContentsMargins(125, 0, 0, 0)
         
         self.content_layout.addWidget(self.news_container)
 

@@ -11,15 +11,11 @@ class NewsCard(QFrame):
         
         self.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #262626, stop:1 #1e1e1e);
+                background: #1e1e1e;
                 border-radius: 16px;
                 border: none;
             }
-            QFrame:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2d2d2d, stop:1 #252525);
-            }
+            QFrame:hover { #252525; }
         """)
         
         self.setCursor(QCursor(Qt.PointingHandCursor))
@@ -27,6 +23,7 @@ class NewsCard(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 15, 20, 15)
         layout.setSpacing(8)
+        layout.setAlignment(Qt.AlignCenter)
         
         # Title
         title_label = QLabel(title)
