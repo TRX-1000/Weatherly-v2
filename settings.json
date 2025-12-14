@@ -1,12 +1,13 @@
 {
-  "temperature_unit": "fahrenheit",
+  "temperature_unit": "celsius",
   "wind_unit": "metric",
   "auto_refresh": true,
-  "default_city": "Bangalore",
-  "news_count": "5",
+  "default_city": "Austin",
+  "news_count": "10",
   "refresh_interval": "manual",
   "notifs": "hi",
   "delete_all_cities": "delete",
   "sidebar_default": "expanded",
-  "time_format": "12h"
+  "time_format": "24h",
+  "pressure_unit": "inhg"
 }

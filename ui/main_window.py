@@ -684,8 +684,8 @@ class MainWindow(QWidget):
 
         card.setMinimumHeight(85)
         card.setMaximumHeight(85)
-        card.setMinimumWidth(260)  # Reduced from 250
-        card.setMaximumWidth(260)  # Add this to limit growth
+        card.setMinimumWidth(260)  
+        card.setMaximumWidth(260)  
 
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 10, 15, 10)
@@ -889,8 +889,8 @@ class MainWindow(QWidget):
             QMenu {
                 background-color: #262626;
                 color: white;
-                border: 1px solid #444;
-                border-radius: 8px;
+                border: none;
+                border-radius: 16px;
                 padding: 5px;
             }
             QMenu::item {
@@ -1045,8 +1045,6 @@ class MainWindow(QWidget):
                 self.clear_news()
         except Exception as e:
             print(f"Error deleting city: {e}")
-            import traceback
-            traceback.print_exc()
 
     def clear_all_cities(self):
         """Clear all saved cities from sidebar"""
