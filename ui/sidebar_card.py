@@ -19,7 +19,7 @@ class WeatherCard(QFrame):
             }
         """)
 
-        self.setFixedHeight(90)
+        self.setFixedHeight(100)
 
         # --- Layouts ---
         layout = QVBoxLayout(self)
@@ -31,10 +31,10 @@ class WeatherCard(QFrame):
         self.city_label = QLabel(self.city)
         city_label_capitalized = self.city_label.text().capitalize()
         self.city_label.setText(city_label_capitalized)
-        self.city_label.setStyleSheet("font-size: 18px; font-weight: bold; background: none;")
+        self.city_label.setStyleSheet("font-size: 20px; font-weight: bold; background: none;")
 
         self.temp_label = QLabel(temp or "--°C")
-        self.temp_label.setStyleSheet("font-size: 22px; font-weight: bold; background: none;")
+        self.temp_label.setStyleSheet("font-size: 24px; font-weight: bold; background: none;")
 
         self.row1.addWidget(self.city_label)
         self.row1.addStretch()
@@ -43,11 +43,11 @@ class WeatherCard(QFrame):
         # Row 2: condition + hi/lo
         self.row2 = QHBoxLayout()
         self.cond_label = QLabel(cond or "Loading...")
-        self.cond_label.setStyleSheet("font-size: 14px; color: #ccc; background: none;")
+        self.cond_label.setStyleSheet("font-size: 16px; color: #ccc; background: none;")
 
         hilo_text = f"H:{hi}  L:{lo}" if hi and lo else "H:--  L:--"
         self.hilo_label = QLabel(hilo_text)
-        self.hilo_label.setStyleSheet("font-size: 14px; color: #aaa; background: none;")
+        self.hilo_label.setStyleSheet("font-size: 16px; color: #aaa; background: none;")
 
         self.row2.addWidget(self.cond_label)
         self.row2.addStretch()

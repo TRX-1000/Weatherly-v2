@@ -148,6 +148,10 @@ class MainWindow(QWidget):
         min_width = self.window_config.get_min_width()
         min_height = self.window_config.get_min_height()
 
+        self.label_spacing = self.window_config.get_label_spacing()
+
+        self.sidebar_max = self.window_config.get_sidebar_max_val()
+
         self.setGeometry(start_x, start_y, width, height)
         self.setMinimumSize(min_width, min_height)
         
@@ -192,7 +196,7 @@ class MainWindow(QWidget):
         # ---------------- MAIN LAYOUT ----------------
     
         self.sidebar_collapsed = 0
-        self.sidebar_expanded = 280
+        self.sidebar_expanded = self.sidebar_max
         self.current_sidebar_width = self.sidebar_expanded  # Start expanded
 
         self.root = QHBoxLayout(self)
@@ -495,13 +499,15 @@ class MainWindow(QWidget):
 
         # Animations
         self.sidebar_anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
-        self.sidebar_anim.setDuration(250)
+        self.sidebar_anim.setDuration(300)
         self.sidebar_anim.setEasingCurve(QEasingCurve.OutCubic)
         self.sidebar_anim.valueChanged.connect(self.update_background_geometry)
         
         self.sidebar_max_anim = QPropertyAnimation(self.sidebar, b"maximumWidth")
-        self.sidebar_max_anim.setDuration(250)
+        self.sidebar_max_anim.setDuration(300)
         self.sidebar_max_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self.sidebar_max_anim.valueChanged.connect(self.update_background_geometry)  # Add this line
+        self.sidebar_max_anim.finished.connect(self.update_background_geometry)  # Add this line too
 
         # Apply sidebar setting after everything is initialized
         self.apply_sidebar_setting()
@@ -648,7 +654,7 @@ class MainWindow(QWidget):
         info_container.setMaximumWidth(1000)
         info_grid = QGridLayout(info_container)
         info_grid.setContentsMargins(0, 0, 0, 0)
-        info_grid.setVerticalSpacing(20)
+        info_grid.setVerticalSpacing(30)
         info_grid.setHorizontalSpacing(45)
 
         info_grid.addWidget(self.feels_like_card, 0, 0)
@@ -670,7 +676,7 @@ class MainWindow(QWidget):
         current_layout.addSpacing(30)
         current_layout.addWidget(info_container, alignment=Qt.AlignCenter)
 
-        self.content_layout.addWidget(self.current_section)
+        self.content_layout.addWidget(self.current_section, alignment=Qt.AlignCenter)
 
     def create_info_card(self, title, value):
         card = QFrame()
@@ -724,8 +730,8 @@ class MainWindow(QWidget):
 
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
-        forecast_header = QLabel("5-Day Forecast")
-        forecast_header.setContentsMargins(125, 0, 0, 0)
+        forecast_header = QLabel("🗓️ 5-Day Forecast")
+        forecast_header.setContentsMargins(self.label_spacing, 0, 0, 0)
         forecast_header.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
@@ -745,11 +751,11 @@ class MainWindow(QWidget):
                 }
             """)       
         
-        self.forecast_container.setMaximumWidth(1000)
+        self.forecast_container.setFixedWidth(870)
         
         self.forecast_layout = QHBoxLayout(self.forecast_container)
         self.forecast_layout.setSpacing(33)
-        self.forecast_layout.setContentsMargins(0, 0, 0, 0)
+        self.forecast_layout.setContentsMargins(20, 20, 20, 20)
         
         self.forecast_cards = []
         for i in range(5):
@@ -809,8 +815,8 @@ class MainWindow(QWidget):
 
     def create_news_section(self):
         """Create the news section"""
-        news_header = QLabel("📰 Weather News")
-        news_header.setContentsMargins(125, 0, 0, 0)
+        news_header = QLabel("📰 News")
+        news_header.setContentsMargins(self.label_spacing, 0, 0, 0)
         news_header.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
@@ -823,13 +829,13 @@ class MainWindow(QWidget):
         
         self.news_container = QFrame()
         self.news_container.setStyleSheet("background: transparent;")
-        self.news_container.setMinimumWidth(1000)
+        self.news_container.setFixedWidth(870)
         
         self.news_layout = QVBoxLayout(self.news_container)
         self.news_layout.setSpacing(15)
-        self.news_layout.setContentsMargins(125, 0, 0, 0)
+        self.news_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.content_layout.addWidget(self.news_container)
+        self.content_layout.addWidget(self.news_container, alignment=Qt.AlignCenter)
 
     # ---------------- Weather Data Fetching ----------------
     def load_saved_cities(self):
@@ -1736,7 +1742,7 @@ class MainWindow(QWidget):
                 item["link"]
             )
 
-            news_card.setMaximumWidth(755)
+            news_card.setMaximumWidth(1000)
             self.news_layout.addWidget(news_card)
 
     def show_news_error(self, error_msg):
@@ -1990,6 +1996,9 @@ class MainWindow(QWidget):
         self.sidebar_max_anim.setEndValue(self.sidebar_expanded)
         self.sidebar_max_anim.start()
 
+        self.update_background_geometry()
+
+
     def collapse_sidebar(self):
         self.current_sidebar_width = self.sidebar_collapsed
 
@@ -2004,6 +2013,9 @@ class MainWindow(QWidget):
         self.sidebar_max_anim.setStartValue(self.sidebar.maximumWidth())
         self.sidebar_max_anim.setEndValue(self.sidebar_collapsed)
         self.sidebar_max_anim.start()
+
+        self.update_background_geometry()
+
 
     def apply_sidebar_setting(self):
         """Apply the saved sidebar setting"""

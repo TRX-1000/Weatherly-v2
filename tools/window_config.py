@@ -87,6 +87,13 @@ class WindowConfig:
         """Get starting Y position for window on current platform"""
         return self.get_current_platform_config().get("start_y", 0)
     
+    def get_label_spacing(self):
+        """ Get the label spacing for different platforms"""
+        return self.get_current_platform_config().get("label_spacing", 0)
+    
+    def get_sidebar_max_val(self):
+        return self.get_current_platform_config().get("sidebar_max", 0)
+    
     def get_platform_name(self):
         """Get current platform name"""
         platform_names = {
