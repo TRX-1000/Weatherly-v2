@@ -548,6 +548,11 @@ A: No. All data is stored locally on your device. No telemetry or tracking.
 **Q: Why isn't my city showing up?**  
 A: Make sure you're spelling it correctly. Try including the country (e.g., "London, UK").
 
+**Q: Why does the precipitation value sometimes look inaccurate?**  
+A: Precipitation data is estimated using weather models and regional radar observations rather than direct measurements at your exact location.  
+Rainfall can vary significantly over short distances and time intervals, so brief or highly localized showers may not be reflected precisely.  
+Values may also represent accumulated precipitation over a forecast period rather than real-time rain intensity.
+
 **Q: Can I change the background images?**  
 A: Yes! Add your images to `assets/background/` and update the code. See [Customization Guide](#-customization-guide).
 
