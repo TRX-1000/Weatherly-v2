@@ -19,6 +19,7 @@ class WeatherCard(QFrame):
             }
         """)
 
+        self.setFixedWidth(265)
         self.setFixedHeight(100)
 
         # --- Layouts ---

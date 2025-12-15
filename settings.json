@@ -4,10 +4,11 @@
   "auto_refresh": true,
   "default_city": "Austin",
   "news_count": "10",
-  "refresh_interval": "manual",
+  "refresh_interval": "15",
   "notifs": "hi",
   "delete_all_cities": "delete",
-  "sidebar_default": "expanded",
+  "sidebar_default": "collapsed",
   "time_format": "12h",
-  "pressure_unit": "inhg"
+  "pressure_unit": "inhg",
+  "location_services": "disabled"
 }
