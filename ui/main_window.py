@@ -1088,45 +1088,59 @@ class MainWindow(QWidget):
 
     def clear_all_cities(self):
         """Clear all saved cities from sidebar"""
-        # Clear the list
-        self.saved_cities.clear()
-        self.save_cities_to_file()
+        try:
+            # Clear all city cards from sidebar
+            for city in list(self.city_cards.keys()):
+                card = self.city_cards[city]
+                self.sidebar_layout.removeWidget(card)
+                card.deleteLater()
+            
+            # Clear dictionaries and lists
+            self.city_cards.clear()
+            self.saved_cities.clear()
+            self.save_cities_to_file()
+            
+            # Reset current city
+            self.current_city = None
+            
+            # Reset main weather display
+            self.city_label.setText("Select a city to view weather")
+            self.temp_label.setText("--°C")
+            self.description_label.setText("--")
+            
+            # Reset info cards (using card.value_label instead of direct labels)
+            self.feels_like_card.value_label.setText("--°C")
+            self.humidity_card.value_label.setText("--%")
+            self.wind_card.value_label.setText("-- km/h")
+            self.pressure_card.value_label.setText("-- hPa")
+            self.clouds_card.value_label.setText("--%")
+            self.visibility_card.value_label.setText("-- km")
+            self.sunrise_card.value_label.setText("--:--")
+            self.sunset_card.value_label.setText("--:--")
+            self.precip_card.value_label.setText("-- mm")
+            
+            # Clear forecast cards
+            for card in self.forecast_cards:
+                card.day_label.setText("--")
+                card.temp_label.setText("--°")
+                card.desc_label.setText("--")
+                card.icon_label.setText("🌤️")
+            
+            # Clear news
+            self.clear_news()
+            
+            # Reset background
+            self.right.setStyleSheet("background-color: #111;")
+            if hasattr(self, 'background_label'):
+                self.background_label.clear()
+            
+            # Clear search bar
+            self.search_bar.clear()
         
-        # Remove all cards from UI
-        for city, card in list(self.city_cards.items()):
-            self.sidebar_layout.removeWidget(card)
-            card.deleteLater()
-        
-        self.city_cards.clear()
-        
-        # Clear current weather display
-        self.current_city = None
-        self.city_label.setText("Select a city to view weather")
-        self.temp_label.setText("--°C")
-        self.description_label.setText("--")
-        self.feels_like_label.setText("Feels like: --°C")
-        self.humidity_label.setText("Humidity: --%")
-        self.wind_label.setText("Wind: -- m/s")
-        self.pressure_label.setText("Pressure: -- hPa")
-        self.clouds_label.setText("Clouds: --%")
-        self.sunrise_label.setText("Sunrise: --:--")
-        self.sunset_label.setText("Sunset: --:--")
-        self.clear_news()
-        
-        # Clear forecast
-        for card in self.forecast_cards:
-            card.day_label.setText("--")
-            card.temp_label.setText("--°")
-            card.desc_label.setText("--")
-            card.icon_label.setText("🌤️")
-        
-        # Reset background
-        self.right.setStyleSheet("background-color: #111;")
-        if hasattr(self, 'background_label'):
-            self.background_label.clear()
-        
-        # Clear search bar
-        self.search_bar.clear()
+        except Exception as e:
+            print(f"Error clearing all cities: {e}")
+            import traceback
+            traceback.print_exc()
 
     
     def open_developer_settings(self):
