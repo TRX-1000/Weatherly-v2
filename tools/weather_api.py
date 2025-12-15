@@ -54,7 +54,10 @@ class WeatherAPI:
             "timestamp": data["dt"],
             "sunrise": data["sys"]["sunrise"],
             "sunset": data["sys"]["sunset"],
-            "timezone": data["timezone"]
+            "timezone": data["timezone"],
+            "visibility": data.get("visibility", 0),
+            "precipitation": (data.get("rain", {}).get("1h", 0) + data.get("snow", {}).get("1h", 0)
+    )
         }
 
     # ---------------------------

@@ -16,6 +16,8 @@ from tools.news_api import NewsAPI
 from tools.window_config import WindowConfig
 from tools.location_detector import LocationWorker
 
+from datetime import datetime, timezone, timedelta
+
 # Dad jokes for easter egg
 DAD_JOKES = [
     "Why did the weather report go to therapy? It had too many issues with precipitation!",
@@ -346,6 +348,7 @@ class MainWindow(QWidget):
             self.background_label.lower()
 
         # Top Bar - Container for centering
+        
         top_bar_container = QHBoxLayout()
         top_bar_container.setContentsMargins(0, 0, 0, 0)
         top_bar_container.setSpacing(0)
@@ -413,14 +416,8 @@ class MainWindow(QWidget):
 
 
         top_bar_container.addWidget(self.floating_menu_button)
-        top_bar_container.addWidget(center_spacer)
+        top_bar_container.addStretch()
         top_bar_container.addWidget(self.location_button)
-        top_bar_container.addWidget(self.settings_button)
-        top_bar_container.addWidget(self.refresh_button)
-
-
-        top_bar_container.addWidget(self.floating_menu_button)
-        top_bar_container.addWidget(center_spacer)
         top_bar_container.addWidget(self.settings_button)
         top_bar_container.addWidget(self.refresh_button)
 
@@ -556,6 +553,21 @@ class MainWindow(QWidget):
         # Show error message
         self.city_label.setText("Location Detection Failed")
         self.description_label.setText(error_msg)
+
+    from datetime import datetime, timezone, timedelta
+
+    def format_time(self, utc_ts, tz_offset, use_24h=True):
+        local_dt = datetime.fromtimestamp(
+            utc_ts,
+            tz=timezone.utc
+        ) + timedelta(seconds=tz_offset)
+
+        # Get the time format preference from settings
+        use_24h = self.settings.get("time_format", "24h") == "24h"
+
+
+        return local_dt.strftime("%H:%M" if use_24h else "%I:%M %p")
+
 
     def setup_refresh_timer(self):
         """Setup auto-refresh timer based on settings"""
@@ -730,19 +742,24 @@ class MainWindow(QWidget):
 
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
+        # Create container for header + forecast cards
+        forecast_wrapper = QWidget()
+        forecast_wrapper.setStyleSheet("background: transparent;")
+        forecast_wrapper_layout = QVBoxLayout(forecast_wrapper)
+        forecast_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        forecast_wrapper_layout.setSpacing(15)
+        
+        # Header inside the wrapper
         forecast_header = QLabel("🗓️ 5-Day Forecast")
-        forecast_header.setContentsMargins(self.label_spacing, 0, 0, 0)
         forecast_header.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
             color: white;
-            padding-left: 5px;
         """)
-        self.content_layout.addWidget(forecast_header)
+        forecast_header.setAlignment(Qt.AlignLeft)
         
         self.forecast_container = QFrame()
-        self.forecast_container.setObjectName("forecastContainer")  # Give it a unique name
-
+        self.forecast_container.setObjectName("forecastContainer")
         self.forecast_container.setStyleSheet("""
                 QFrame#forecastContainer {
                     background: rgba(255, 255, 255, 0.1);
@@ -762,9 +779,12 @@ class MainWindow(QWidget):
             card = self.create_forecast_card()
             self.forecast_cards.append(card)
             self.forecast_layout.addWidget(card)
-
         
-        self.content_layout.addWidget(self.forecast_container, alignment=Qt.AlignCenter)
+        # Add header and container to wrapper
+        forecast_wrapper_layout.addWidget(forecast_header)
+        forecast_wrapper_layout.addWidget(self.forecast_container, alignment=Qt.AlignCenter)
+        # Add wrapper to main content (not individual pieces)
+        self.content_layout.addWidget(forecast_wrapper, alignment=Qt.AlignCenter)
 
     def create_forecast_card(self):
         """Create a single forecast day card"""
@@ -815,17 +835,26 @@ class MainWindow(QWidget):
 
     def create_news_section(self):
         """Create the news section"""
+        # Create container for header + news cards
+        news_wrapper = QWidget()
+        news_wrapper.setStyleSheet("background: transparent;")
+        news_wrapper.setFixedWidth(870)  # ← ADD THIS - match container width
+        news_wrapper_layout = QVBoxLayout(news_wrapper)
+        news_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        news_wrapper_layout.setSpacing(15)
+        
+        # Header inside the wrapper
         news_header = QLabel("📰 News")
-        news_header.setContentsMargins(self.label_spacing, 0, 0, 0)
         news_header.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
             background: none;
             color: white;
-            padding-left: 5px;
             margin-top: 10px;
         """)
-        self.content_layout.addWidget(news_header)
+        news_header.setContentsMargins(0, 0, 0, 0)  # ← ADD THIS
+
+        news_header.setAlignment(Qt.AlignLeft)
         
         self.news_container = QFrame()
         self.news_container.setStyleSheet("background: transparent;")
@@ -835,7 +864,12 @@ class MainWindow(QWidget):
         self.news_layout.setSpacing(15)
         self.news_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.content_layout.addWidget(self.news_container, alignment=Qt.AlignCenter)
+        # Add header and container to wrapper
+        news_wrapper_layout.addWidget(news_header)
+        news_wrapper_layout.addWidget(self.news_container, alignment=Qt.AlignCenter)
+        
+        # Add wrapper to main content
+        self.content_layout.addWidget(news_wrapper, alignment=Qt.AlignCenter)
 
     # ---------------- Weather Data Fetching ----------------
     def load_saved_cities(self):
@@ -1366,16 +1400,18 @@ class MainWindow(QWidget):
         self.temp_label.setText(f"{temp}°C {emoji}")
         self.description_label.setText(description)
         
-        # Add absurd details
-        self.feels_like_label.setText(f"Feels like: Absolutely unreal")
-        self.humidity_label.setText(f"Humidity: {random.randint(0, 200)}%")
-        self.wind_label.setText(f"Wind: {random.choice(['Mild', 'Dragon breath', 'Existential', 'Yes'])}")
-        self.pressure_label.setText(f"Pressure: {random.randint(1, 9999)} hopes/dreams")
-        self.clouds_label.setText(f"Clouds: {random.choice(['Fluffy', 'Ominous', 'Pixelated', 'Sentient'])} ")
-        self.sunrise_label.setText(f"🌅 Sunrise: {random.choice(['Never', 'Always', '??:??', 'Quantum'])}")
-        self.sunset_label.setText(f"🌇 Sunset: {random.choice(['Maybe', 'Depends', 'Ask later', '42:00'])}")
+        # Add absurd details to CARDS (not labels)
+        self.feels_like_card.value_label.setText("Absolutely unreal")
+        self.humidity_card.value_label.setText(f"{random.randint(0, 200)}%")
+        self.wind_card.value_label.setText(random.choice(['Mild', 'Dragon breath', 'Existential', 'Yes']))
+        self.pressure_card.value_label.setText(f"{random.randint(1, 9999)} hPa")
+        self.clouds_card.value_label.setText(random.choice(['Fluffy', 'Ominous', 'Pixelated', 'Sentient']))
+        self.visibility_card.value_label.setText(random.choice(['∞ km', '??? km', '0.0 km', '42 km']))
+        self.precip_card.value_label.setText(random.choice(['Cats & Dogs', 'Frogs 🐸', 'Money 💰', 'None']))
+        self.sunrise_card.value_label.setText(random.choice(['Never', 'Always', '??:??', 'Quantum']))
+        self.sunset_card.value_label.setText(random.choice(['Maybe', 'Depends', 'Ask later', '42:00']))
         
-        # Clear forecast and news
+        # Clear forecast and add absurd forecast data
         for card in self.forecast_cards:
             card.day_label.setText(random.choice(["Mon?", "Tues!", "Nope", "Maybe", "Soon"]))
             card.temp_label.setText(f"{random.randint(-50, 100)}°")
@@ -1384,6 +1420,7 @@ class MainWindow(QWidget):
             ]))
             card.icon_label.setText(random.choice(["❓", "🎲", "🎪", "🎭", "🎰", "🃏"]))
         
+        # Clear news
         self.clear_news()
         
         # Mark as found
@@ -1394,9 +1431,9 @@ class MainWindow(QWidget):
         msg = QMessageBox(self)
         msg.setWindowTitle("📺 Channel 42")
         msg.setText("Welcome to Channel 42!\n\n"
-                   "The weather channel that doesn't exist...\n"
-                   "Broadcasting from locations that may or may not be real.\n\n"
-                   "Don't tell anyone about this. 🤫")
+                "The weather channel that doesn't exist...\n"
+                "Broadcasting from locations that may or may not be real.\n\n"
+                "Don't tell anyone about this. 🤫")
         msg.setStyleSheet("""
             QMessageBox {
                 background-color: #1a1a1a;
@@ -1761,26 +1798,99 @@ class MainWindow(QWidget):
 
     def update_current_weather(self, data):
         """Update current weather display"""
-        # Track API call
+
+        # Track API calls
         self.total_api_calls = getattr(self.weather_api, 'api_calls_made', 0)
-        
-        self.city_label.setText(f"{data['city']}, {data['country']}")
+
+        # -------------------------------------------------
+        # Header
+        # -------------------------------------------------
         self.city_label.setText(f"{data['city']}, {data['country']}")
         self.temp_label.setText(self.format_temperature(data['temperature']))
         self.description_label.setText(data['description'].title())
-        
-        
-        
-        
-        # Format sunrise/sunset times
-        from datetime import datetime
-        sunrise_time = datetime.fromtimestamp(data['sunrise'] + data['timezone']).strftime('%H:%M')
-        sunset_time = datetime.fromtimestamp(data['sunset'] + data['timezone']).strftime('%H:%M')
-        
-        
-        # Update background based on weather using weather ID
-        weather_id = data.get('id', 800)
+
+        # -------------------------------------------------
+        # Info cards: temperatures & atmosphere
+        # -------------------------------------------------
+        self.feels_like_card.value_label.setText(
+            self.format_temperature(data["feels_like"])
+        )
+
+        self.humidity_card.value_label.setText(
+            f"{data['humidity']}%"
+        )
+
+        self.pressure_card.value_label.setText(
+            f"{data['pressure']} hPa"
+        )
+
+        self.clouds_card.value_label.setText(
+            f"{data['clouds']}%"
+        )
+
+        # -------------------------------------------------
+        # Visibility (meters → km)
+        # -------------------------------------------------
+        visibility_km = data["visibility"] / 1000
+        self.visibility_card.value_label.setText(
+            f"{visibility_km:.1f} km"
+        )
+
+        # -------------------------------------------------
+        # Wind
+        # -------------------------------------------------
+        self.wind_card.value_label.setText(
+            self.format_wind_speed(data["wind_speed"])
+        )
+
+        # -------------------------------------------------
+        # Precipitation (compact card-friendly format)
+        # -------------------------------------------------
+        rain = data.get("rain", 0)
+        snow = data.get("snow", 0)
+        total_precip = data.get("precipitation", 0)
+
+        # -------------------------------------------------
+        # Precipitation (safe access)
+        # -------------------------------------------------
+        rain = data.get("rain", 0)
+        snow = data.get("snow", 0)
+        total_precip = data.get("precipitation", 0)
+
+        if rain > 0 and snow > 0:
+            precip_text = f"{total_precip:.1f} mm 🌧❄"
+        elif snow > 0:
+            precip_text = f"{snow:.1f} mm ❄"
+        elif rain > 0:
+            precip_text = f"{rain:.1f} mm 🌧"
+        else:
+            precip_text = "None"
+
+        self.precip_card.value_label.setText(precip_text)
+
+
+        # -------------------------------------------------
+        # Sunrise / Sunset
+        # -------------------------------------------------
+        sunrise_time = self.format_time(
+            data["sunrise"],
+            data["timezone"],
+        )
+
+        sunset_time = self.format_time(
+            data["sunset"],
+            data["timezone"],
+        )
+
+        self.sunrise_card.value_label.setText(sunrise_time)
+        self.sunset_card.value_label.setText(sunset_time)
+
+        # -------------------------------------------------
+        # Background based on weather ID
+        # -------------------------------------------------
+        weather_id = data.get("id", 800)
         self.update_background(weather_id)
+
         
     def update_background(self, weather_id):
         """Update background image based on OpenWeatherMap weather ID"""

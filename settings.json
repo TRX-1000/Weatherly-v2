@@ -8,6 +8,6 @@
   "notifs": "hi",
   "delete_all_cities": "delete",
   "sidebar_default": "expanded",
-  "time_format": "24h",
+  "time_format": "12h",
   "pressure_unit": "inhg"
 }
