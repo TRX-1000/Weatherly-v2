@@ -195,12 +195,26 @@ python main.py
 
 ## 📸 Screenshots
 
-> *Add screenshots of your application here showing:*
-> - Main weather display
-> - Sidebar with multiple cities
-> - Settings page
-> - Different weather backgrounds
-> - News section
+![Main Window](https://github.com/user-attachments/assets/e47c527c-ee4d-4472-9572-804fc534729f)
+
+
+![News Section](https://github.com/user-attachments/assets/91e2f03a-67b4-4949-acf4-f89131e44898)
+
+
+![Main Window with Sidebar](https://github.com/user-attachments/assets/04175f60-3a86-4f7c-853f-b9f05e99aeab)
+
+
+![News Display with Sidebar](https://github.com/user-attachments/assets/f90cdb49-11b4-476d-945b-12c30524f007)
+
+
+![Settings Page](https://github.com/user-attachments/assets/9f6d4aa6-a508-4f67-ba12-3330fedd9b1a)
+
+
+![Settings Page](https://github.com/user-attachments/assets/230c5400-86f1-4b91-864b-8ccabe8e1672)
+
+
+![Settings Page](https://github.com/user-attachments/assets/eb72c6d0-c7dc-4605-ba58-d642fbc00251)
+
 
 ---
 
