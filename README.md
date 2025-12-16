@@ -1,128 +1,209 @@
-# 🌤️ Weatherly
+# 🌤️ Weatherly v2.0
 
-A sleek, modern weather application built with PyQt5 featuring a beautiful dark UI and smooth animations.
+**Weatherly** is a modern, cross-platform desktop weather application built with **PyQt5**, focused on clean UI design, smooth interactions, and practical weather information — without overwhelming the user.
 
-## ✨ Features
-
-- **Modern Dark Theme** - Eye-friendly dark interface with smooth gradients
-- **Animated Sidebar** - Collapsible sidebar with fluid animations
-- **Responsive Design** - Adapts to different window sizes
-- **Search Functionality** - Quick location search with autocomplete
-- **Real-time Updates** - Refresh button for latest weather data
-
-## 🎨 UI Highlights
-
-- Smooth 300ms cubic easing animations
-- Glassmorphic design elements
-- Rounded corners and modern spacing
-- Hover effects on interactive elements
-- Dynamic search bar that adjusts with sidebar state
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-```bash
-Python 3.7 or higher
-PyQt5
-```
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone https://github.com/yTRX-1000/Weatherly-v2.git
-cd weatherly-v2
-```
-
-2. Install dependencies
-```bash
-pip install PyQt5
-```
-```bash
-pip install feedparser
-```
-
-3. Run the application
-```bash
-python weatherly-v2.py
-```
-
-## 🎯 Usage
-
-- **Toggle Sidebar**: Click the menu button (☰) in the top-left corner
-- **Search Location**: Type a city name or location in the search bar
-- **Refresh Data**: Click the refresh button (↻) to update weather information
-
-## 🛠️ Technical Details
-
-### Architecture
-
-The application uses PyQt5's animation framework for smooth UI transitions:
-
-- `QPropertyAnimation` for sidebar expansion/collapse
-- Dynamic width adjustment for responsive search bar
-- Event-driven architecture for user interactions
-
-### Key Components
-
-- **Sidebar**: Collapsible navigation panel (0px → 250px)
-- **Search Bar**: Adaptive width search input
-- **Top Bar**: Fixed header with menu and refresh controls
-- **Content Area**: Main display area with rounded frame
-
-## 🎨 Customization
-
-You can easily customize the colors by modifying the stylesheet values:
-
-```python
-# Sidebar background
-background-color: #1a1a1a;
-
-# Main content area
-background-color: #111;
-
-# Interactive elements
-background: #262626;
-
-# Hover states
-background: #333;
-```
-
-## 📝 Roadmap
-
-- [ ] Weather API integration
-- [ ] Multiple location support
-- [ ] Weather forecasts and graphs
-- [ ] Temperature unit toggle (°C/°F)
-- [ ] Dark/Light theme switcher
-- [ ] Desktop notifications
-- [ ] System tray integration
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- PyQt5 documentation and community
-- Modern UI design inspiration from contemporary weather apps
-- Animation patterns from Material Design guidelines
-
-## 📧 Contact
-
-Project Link: [https://github.com/TRX-1000/Weatherly-v2](https://github.com/TRX-1000/Weatherly-v2)
+It is designed to feel *native*, responsive, and visually polished while remaining lightweight and easy to use.
 
 ---
 
-⭐ Star this repo if you find it helpful!
+## 📸 Screenshots
+
+**Main dashboard with dynamic weather background (sidebar collapsed)**  
+![Main Window](https://github.com/user-attachments/assets/e47c527c-ee4d-4472-9572-804fc534729f)
+
+**Saved cities and navigation (sidebar expanded)**  
+![Main Window with Sidebar](https://github.com/user-attachments/assets/04175f60-3a86-4f7c-853f-b9f05e99aeab)
+
+**Integrated weather-related news feed**  
+![News Section](https://github.com/user-attachments/assets/91e2f03a-67b4-4949-acf4-f89131e44898)
+
+**Settings and customization options**  
+![Settings Page](https://github.com/user-attachments/assets/9f6d4aa6-a508-4f67-ba12-3330fedd9b1a)
+
+---
+
+## 🧠 Design Philosophy
+
+Weatherly was built with three guiding principles:
+
+- **Clarity over clutter** — show useful data without overwhelming the UI  
+- **Responsiveness** — no freezing or blocking, even on slow networks  
+- **Visual polish** — smooth animations and consistent styling throughout  
+
+The goal is a desktop weather app that feels modern and pleasant to use, rather than purely utilitarian.
+
+---
+
+## ✨ Features
+
+### 🎨 User Interface
+- Modern dark theme optimized for long usage
+- Dynamic backgrounds based on current weather conditions
+- Smooth animations using cubic easing
+- Collapsible, animated sidebar for saved locations
+- Responsive layout that adapts to window resizing
+- Subtle hover states and interaction feedback
+
+### 🌍 Weather Data
+- Real-time current weather:
+  - Temperature and “feels like”
+  - Humidity, pressure, wind speed & direction
+  - Cloud cover, visibility, precipitation
+  - Sunrise and sunset times
+- 5-day weather forecast with icons
+- Unlimited saved cities
+- Automatic refresh (manual, 15 min, 30 min, 1 hour)
+- Optional IP-based location detection
+
+### 📰 Weather News
+- Location-specific weather-related news
+- Smart filtering to avoid unrelated articles
+- Configurable number of articles (5 / 10 / 15)
+- Relative timestamps (e.g., “2 days ago”)
+- One-click access to full articles
+
+### ⚙️ Customization
+- Units:
+  - Temperature (°C / °F)
+  - Wind speed (m/s / mph)
+  - Pressure (hPa / inHg)
+  - Precipitation (mm / in)
+- Display options:
+  - 12h / 24h time format
+  - Default startup city
+  - Sidebar default state
+- Privacy:
+  - Optional location services
+  - All data stored locally
+  - No analytics or tracking
+
+### 🛠️ Technical Highlights
+- Cross-platform support (macOS & Windows)
+- Platform-specific window sizing and behavior
+- Background API calls using threads (non-blocking UI)
+- Persistent local storage using JSON
+- Graceful handling of network and API errors
+- Powered by OpenWeatherMap
+
+---
+
+## 🚀 Installation
+
+### Requirements
+- Python **3.7+**
+- `pip`
+
+### Quick Start
+```bash
+git clone https://github.com/TRX-1000/Weatherly-v2.git
+cd Weatherly-v2
+pip install -r requirements.txt
+python main.py
+```
+
+### Recommended: Virtual Environment
+
+```bash
+python3 -m venv venv   # On Windows: python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+---
+
+## 🎯 First-Time Usage
+
+1. Launch the app using `python main.py`
+2. Your location can be auto-detected (optional)
+3. Search for a city using the search bar
+4. Cities are saved automatically in the sidebar
+5. Click any city to switch instantly
+6. Open settings (⚙️) to customize units and behavior
+
+---
+
+## 🧭 Controls
+
+| Action | Method |
+|------|------|
+| Toggle sidebar | ☰ menu button |
+| Search city | Enter city name + Enter |
+| Refresh data | ↻ refresh button |
+| Detect location | 📍 button |
+| Open settings | ⚙️ button |
+| Remove city | Right-click city card |
+
+---
+
+## ⚙️ Configuration
+
+### `settings.json`
+```json
+{
+  "temperature_unit": "celsius",
+  "wind_unit": "metric",
+  "pressure_unit": "hpa",
+  "precipitation_unit": "mm",
+  "time_format": "24h",
+  "auto_refresh": true,
+  "refresh_interval": "15",
+  "default_city": "London",
+  "news_count": "10",
+  "sidebar_default": "expanded",
+  "location_services": "enabled"
+}
+```
+
+---
+
+## 🔑 API Configuration
+
+Weatherly uses **OpenWeatherMap**.
+
+To use your own API key:
+1. Open `main_window.py`
+2. Replace:
+```python
+WeatherAPI("YOUR_API_KEY")
+```
+with your personal API key.
+
+> A default key is included for convenience, but using your own key is recommended for long-term use.
+
+---
+
+## 🗂️ Project Structure
+
+```
+Weatherly-v2/
+├── main.py
+├── requirements.txt
+├── ui/
+├── tools/
+├── assets/
+└── settings.json
+```
+
+---
+
+## 🗺️ Roadmap
+
+- Hourly forecast
+- Weather alerts
+- Weather radar
+- Historical data
+- Multiple themes
+- AQI & UV index
+- Graphs & trends
+- System tray integration
+
+---
+
+## 📝 License
+
+Licensed under the **MIT License**.
+
+---
+
+### ⭐ If you find Weatherly useful, consider starring the repository
