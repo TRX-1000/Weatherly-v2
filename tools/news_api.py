@@ -153,7 +153,7 @@ class NewsWorker(QThread):
 
                 
                 # Stop once we have 5 recent items
-                if len(news_items) >= 10:
+                if len(news_items) >= 15:
                     break
             
             # Sort by date (most recent first)
