@@ -5,7 +5,8 @@
     "min_width": 1470,
     "min_height": 810,
     "start_x": 0,
-    "start_y": 0
+    "start_y": 0,
+    "sidebar_opened": 280
   },
   "Windows": {
     "width": 1350,
@@ -13,6 +14,7 @@
     "min_width": 1375,
     "min_height": 775,
     "start_x": 100,
-    "start_y": 100
+    "start_y": 100,
+    "sidebar_opened": 300
   }
 }

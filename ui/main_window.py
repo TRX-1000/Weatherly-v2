@@ -76,61 +76,6 @@ class WeatherWorker(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
-    def keyPressEvent(self, event):
-        """Handle key press events for easter eggs"""
-        # Konami code tracking
-        self.konami_sequence.append(event.key())
-            
-            
-        # Keep only last 10 keys
-        if len(self.konami_sequence) > 10:
-            self.konami_sequence.pop(0)
-            
-        # Check if konami code matches
-        if self.konami_sequence == self.konami_code:
-            self.activate_konami_code()
-            
-        super().keyPressEvent(event)
-    
-    def activate_konami_code(self):
-        """Activate Konami Code easter egg"""
-        self.setWindowTitle("Weatherly - GOD MODE ACTIVATED ⚡")
-        
-        # Show dramatic message
-        from PyQt5.QtWidgets import QMessageBox
-        msg = QMessageBox(self)
-        msg.setWindowTitle("🎮 KONAMI CODE ACTIVATED!")
-        msg.setText("⚡ WEATHER GOD MODE UNLOCKED ⚡\n\n"
-                   "You now have ultimate power over... absolutely nothing!\n"
-                   "But you feel awesome! 😎")
-        msg.setStyleSheet("""
-            QMessageBox {
-                background-color: #1a1a1a;
-            }
-            QMessageBox QLabel {
-                color: #FFD700;
-                font-size: 16px;
-                font-weight: bold;
-            }
-            QPushButton {
-                background-color: #FFD700;
-                color: #000;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 80px;
-            }
-            QPushButton:hover {
-                background-color: #FFA500;
-            }
-        """)
-        msg.exec_()
-        
-        # Reset after 5 seconds
-        QTimer.singleShot(5000, lambda: self.setWindowTitle("Weatherly"))
-
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -169,14 +114,6 @@ class MainWindow(QWidget):
         # Load settings from file
         self.settings_file = "settings.json"
         self.settings = self.load_settings()
-
-        # Konami code tracking
-        self.konami_sequence = []
-        self.konami_code = [
-            Qt.Key_Up, Qt.Key_Up, Qt.Key_Down, Qt.Key_Down,
-            Qt.Key_Left, Qt.Key_Right, Qt.Key_Left, Qt.Key_Right,
-            Qt.Key_B, Qt.Key_A
-        ]
 
         # Refresh button spam tracking
         self.refresh_click_count = 0
@@ -1168,8 +1105,6 @@ class MainWindow(QWidget):
             
         # Count Easter eggs found
         easter_eggs_found = 0
-        if hasattr(self, 'konami_sequence'):
-            easter_eggs_found += 1
         if hasattr(self, 'dev_mode_active') and self.dev_mode_active:
             easter_eggs_found += 1
         if hasattr(self, 'channel_42_found') and self.channel_42_found:
@@ -1230,7 +1165,6 @@ class MainWindow(QWidget):
     └─ Position: ({self.x()}, {self.y()})
 
     [EASTER EGGS DISCOVERED]
-    ├─ Konami Code: {'✓' if hasattr(self, 'konami_sequence') else '✗'}
     ├─ Developer Mode: ✓ (You're here!)
     ├─ Channel 42: {'✓' if hasattr(self, 'channel_42_found') else '✗'}
     ├─ Dad Jokes: {'✓' if any(hasattr(card, 'click_count') for card in self.city_cards.values()) else '✗'}
