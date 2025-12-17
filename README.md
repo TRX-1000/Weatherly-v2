@@ -9,16 +9,16 @@ It is designed to feel *native*, responsive, and visually polished while remaini
 ## 📸 Screenshots
 
 **Main dashboard with dynamic weather background (sidebar collapsed)**  
-![Main Window](https://github.com/user-attachments/assets/e47c527c-ee4d-4472-9572-804fc534729f)
+![Main Window](https://github.com/user-attachments/assets/8188d702-8ca9-48dc-ad3e-0492ba1882c9)
 
 **Saved cities and navigation (sidebar expanded)**  
-![Main Window with Sidebar](https://github.com/user-attachments/assets/04175f60-3a86-4f7c-853f-b9f05e99aeab)
+![Main Window with Sidebar](https://github.com/user-attachments/assets/0e585d5b-4a38-41e1-b6dd-2be865e6c6fd)
 
 **Integrated weather-related news feed**  
-![News Section](https://github.com/user-attachments/assets/91e2f03a-67b4-4949-acf4-f89131e44898)
+![News Section](https://github.com/user-attachments/assets/0b5e8a41-ac74-48bd-a8e4-974cf98f97d4)
 
 **Settings and customization options**  
-![Settings Page](https://github.com/user-attachments/assets/9f6d4aa6-a508-4f67-ba12-3330fedd9b1a)
+![Settings Page](https://github.com/user-attachments/assets/62be8103-f6dd-4cf1-b473-08b1fb539282)
 
 ---
 
