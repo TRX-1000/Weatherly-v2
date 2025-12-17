@@ -552,13 +552,13 @@ class MainWindow(QWidget):
         
         current_layout = QVBoxLayout(self.current_section)
         current_layout.setContentsMargins(0, 0, 0, 0)
-        current_layout.setSpacing(15)
+        current_layout.setSpacing(5)
 
         self.city_label = QLabel("Select a city to view weather")
         self.city_label.setStyleSheet("font-size: 45px; font-weight: bold; color: white; background: none;")
         self.city_label.setAlignment(Qt.AlignCenter)
         
-        self.temp_label = QLabel("--Â°C")
+        self.temp_label = QLabel("--°C")
         self.temp_label.setStyleSheet("font-size: 120px; font-weight: bold; color: white; background: none;")
         self.temp_label.setAlignment(Qt.AlignCenter)
         
@@ -568,22 +568,14 @@ class MainWindow(QWidget):
         
 
         # Create info cards and add to grid
-        self.feels_like_card = self.create_info_card(" Feels Like", "--Â°C")
-
+        self.feels_like_card = self.create_info_card(" Feels Like", "--°C")
         self.humidity_card = self.create_info_card(" Humidity", "--%")
-
         self.wind_card = self.create_info_card(" Wind Speed", "-- km/h")
-
         self.pressure_card = self.create_info_card(" Pressure", "-- hPa")
-
         self.clouds_card = self.create_info_card(" Cloudiness", "--%")
-
         self.precip_card = self.create_info_card(" Precipitation", "-- mm")
-
         self.visibility_card = self.create_info_card(" Visibility", "-- km")
-
         self.sunrise_card = self.create_info_card(" Sunrise", "--:--")
-
         self.sunset_card = self.create_info_card(" Sunset", "--:--")
 
         # Grid container for info cards
@@ -606,10 +598,6 @@ class MainWindow(QWidget):
         info_grid.addWidget(self.sunrise_card, 2, 0)
         info_grid.addWidget(self.sunset_card, 2, 1)
         info_grid.addWidget(self.precip_card, 2, 2)
-
-        """ info_grid.setColumnStretch(0, 1)
-        info_grid.setColumnStretch(1, 1)
-        info_grid.setColumnStretch(2, 1) """
 
         current_layout.setAlignment(Qt.AlignCenter)
         current_layout.addWidget(self.city_label)
@@ -1057,7 +1045,6 @@ class MainWindow(QWidget):
         for city, card in list(self.city_cards.items()):
             self.sidebar_layout.removeWidget(card)
             card.deleteLater()
-        
         self.city_cards.clear()
         
         # Clear current weather display
@@ -1065,13 +1052,18 @@ class MainWindow(QWidget):
         self.city_label.setText("Select a city to view weather")
         self.temp_label.setText("--°C")
         self.description_label.setText("--")
-        self.feels_like_label.setText("Feels like: --°C")
-        self.humidity_label.setText("Humidity: --%")
-        self.wind_label.setText("Wind: -- m/s")
-        self.pressure_label.setText("Pressure: -- hPa")
-        self.clouds_label.setText("Clouds: --%")
-        self.sunrise_label.setText("Sunrise: --:--")
-        self.sunset_label.setText("Sunset: --:--")
+        
+        self.feels_like_card.value_label.setText("--°C")
+        self.humidity_card.value_label.setText("--%")
+        self.wind_card.value_label.setText("-- m/s")
+        self.pressure_card.value_label.setText("-- hPa")
+        self.clouds_card.value_label.setText("--%")
+        self.precip_card.value_label.setText("-- mm")
+        self.sunrise_card.value_label.setText("--:--")
+        self.sunset_card.value_label.setText("--:--")
+
+        
+        # Clear news
         self.clear_news()
         
         # Clear forecast
@@ -1358,14 +1350,16 @@ class MainWindow(QWidget):
         self.temp_label.setText(f"{temp}°C {emoji}")
         self.description_label.setText(description)
         
-        # Add absurd details
-        self.feels_like_label.setText(f"Feels like: Absolutely unreal")
-        self.humidity_label.setText(f"Humidity: {random.randint(0, 200)}%")
-        self.wind_label.setText(f"Wind: {random.choice(['Mild', 'Dragon breath', 'Existential', 'Yes'])}")
-        self.pressure_label.setText(f"Pressure: {random.randint(1, 9999)} hopes/dreams")
-        self.clouds_label.setText(f"Clouds: {random.choice(['Fluffy', 'Ominous', 'Pixelated', 'Sentient'])} ")
-        self.sunrise_label.setText(f"🌅 Sunrise: {random.choice(['Never', 'Always', '??:??', 'Quantum'])}")
-        self.sunset_label.setText(f"🌇 Sunset: {random.choice(['Maybe', 'Depends', 'Ask later', '42:00'])}")
+
+        # Add absurd details for easter egg
+        self.feels_like_card.value_label.setText("Absolutely unreal")
+        self.humidity_card.value_label.setText(f"{random.randint(0, 200)}%")
+        self.wind_card.value_label.setText(random.choice(["Mild", "Dragon breath", "Existential", "Yes"]))
+        self.pressure_card.value_label.setText(f"{random.randint(1, 9999)} hopes/dreams")
+        self.clouds_card.value_label.setText(random.choice(["Fluffy", "Ominous", "Pixelated", "Sentient"]))
+        self.sunrise_card.value_label.setText(f"🌅 {random.choice(['Never', 'Always', '??:??', 'Quantum'])}")
+        self.sunset_card.value_label.setText(f"🌇 {random.choice(['Maybe', 'Depends', 'Ask later', '42:00'])}")
+
         
         # Clear forecast and news
         for card in self.forecast_cards:
