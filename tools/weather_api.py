@@ -38,24 +38,33 @@ class WeatherAPI:
         return {
             "city": data["name"],
             "country": data["sys"]["country"],
+
             "temperature": m["temp"],
             "feels_like": m["feels_like"],
             "temp_min": m["temp_min"],
             "temp_max": m["temp_max"],
             "humidity": m["humidity"],
             "pressure": m["pressure"],
+
             "description": w["description"],
             "main": w["main"],
             "icon": w["icon"],
-            "id": w["id"],  # Added weather condition ID
+            "id": w["id"],
+
             "wind_speed": data["wind"]["speed"],
             "wind_deg": data["wind"].get("deg", 0),
             "clouds": data["clouds"]["all"],
+            "visibility": data.get("visibility", 0),
+
+            "rain": data.get("rain", {}),
+            "snow": data.get("snow", {}),
+
             "timestamp": data["dt"],
             "sunrise": data["sys"]["sunrise"],
             "sunset": data["sys"]["sunset"],
-            "timezone": data["timezone"]
+            "timezone": data["timezone"],
         }
+
 
     # ---------------------------
     # 5-Day / 3-Hour Forecast
@@ -89,7 +98,8 @@ class WeatherAPI:
                 "description": w["description"],
                 "main": w["main"],
                 "icon": w["icon"],
-                "id": w["id"],  # Added weather condition ID
+                "id": w["id"],  # Added weather condition ID,
+                "visibility": data.get("visibility"),
                 "wind_speed": item["wind"]["speed"],
                 "wind_deg": item["wind"].get("deg", 0),
                 "clouds": item["clouds"]["all"],

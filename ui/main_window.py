@@ -15,6 +15,8 @@ from tools.weather_api import WeatherAPI
 from tools.news_api import NewsAPI
 from tools.window_config import WindowConfig
 from tools.location_detector import LocationWorker
+\
+from datetime import datetime, timezone, timedelta
 
 # Dad jokes for easter egg
 DAD_JOKES = [
@@ -95,8 +97,7 @@ class MainWindow(QWidget):
         self.label_spacing = self.window_config.get_label_spacing()
 
         self.setGeometry(start_x, start_y, width, height)
-        self.setMinimumSize(min_width, min_height)
-        
+        self.setMinimumSize(min_width, min_height)        
 
         # Initialize APIs
         self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
@@ -115,6 +116,9 @@ class MainWindow(QWidget):
         # Load settings from file
         self.settings_file = "settings.json"
         self.settings = self.load_settings()
+
+        self.use_24h = self.settings.get("time_format", "24h") == "24h"
+
 
         # Refresh button spam tracking
         self.refresh_click_count = 0
@@ -495,6 +499,7 @@ class MainWindow(QWidget):
             print(f"Auto-refresh enabled: every {minutes} minutes")
         else:
             print("Auto-refresh disabled (manual mode)")
+
     
     def auto_refresh_weather(self):
         """Auto-refresh weather data"""
@@ -654,7 +659,9 @@ class MainWindow(QWidget):
         layout.addWidget(title_label)
         layout.addWidget(value_label)
 
+        card.title_label = title_label
         card.value_label = value_label
+
         return card
 
     def create_forecast_section(self):
@@ -870,6 +877,37 @@ class MainWindow(QWidget):
             self.workers.append(worker)
         except Exception as e:
             print(f"Error creating worker for {city}: {e}")
+
+    def get_current_weather(self, city, units="metric"):
+        data = self._request("weather", {"q": city, "units": units})
+        if not data:
+            return None
+
+        w = data["weather"][0]
+        m = data["main"]
+
+        return {
+            "city": data["name"],
+            "country": data["sys"]["country"],
+            "temperature": m["temp"],
+            "feels_like": m["feels_like"],
+            "temp_min": m["temp_min"],
+            "temp_max": m["temp_max"],
+            "humidity": m["humidity"],
+            "pressure": m["pressure"],
+            "description": w["description"],
+            "main": w["main"],
+            "icon": w["icon"],
+            "id": w["id"],
+            "wind_speed": data["wind"]["speed"],
+            "wind_deg": data["wind"].get("deg", 0),
+            "clouds": data["clouds"]["all"],
+            "visibility": data.get("visibility", 10000),  # ADD THIS LINE
+            "timestamp": data["dt"],
+            "sunrise": data["sys"]["sunrise"],
+            "sunset": data["sys"]["sunset"],
+            "timezone": data["timezone"]
+        }
     
     def handle_city_card_error(self, city, err):
         """Handle errors when loading city card weather"""
@@ -1596,11 +1634,19 @@ class MainWindow(QWidget):
         self.settings = new_settings
         self.save_settings_to_file()
 
+        # Update 12/24h preference
+        self.use_24h = self.settings.get("time_format", "24h") == "24h"
+
         self.setup_refresh_timer()
         
         # Refresh weather with new units if a city is loaded
         if self.current_city:
             self.refresh_weather()
+        
+        # Update sunrise/sunset labels if current weather is loaded
+        if hasattr(self, "current_weather_data") and self.current_weather_data:
+            self.update_current_weather(self.current_weather_data)
+
 
     def convert_temperature(self, temp_celsius):
         """Convert temperature based on settings"""
@@ -1625,6 +1671,25 @@ class MainWindow(QWidget):
         converted = self.convert_wind_speed(speed_ms)
         unit = "mph" if self.settings.get("wind_unit") == "imperial" else "m/s"
         return f"{converted:.1f} {unit}"
+    
+    def format_local_time(self, utc_ts, tz_offset, use_24h):
+        local_dt = datetime.fromtimestamp(utc_ts, tz=timezone.utc) + timedelta(seconds=tz_offset)
+        return local_dt.strftime("%H:%M" if use_24h else "%I:%M %p")
+    
+    def format_precipitation(self, data):
+        rain = data.get("rain", {}).get("1h", 0)
+        snow = data.get("snow", {}).get("1h", 0)
+
+        if rain > 0 and snow > 0:
+            return "Mixed", f"Rain: {rain:.1f} mm\nSnow: {snow:.1f} mm"
+
+        if rain > 0:
+            return "Rain", f"{rain:.1f} mm"
+
+        if snow > 0:
+            return "Snow", f"{snow:.1f} mm"
+
+        return "Precipitation", "—"
 
     def fetch_news(self, city):
         """Fetch weather news for the city"""
@@ -1702,27 +1767,41 @@ class MainWindow(QWidget):
         self.news_layout.addWidget(error_label)
 
     def update_current_weather(self, data):
-        """Update current weather display"""
-        # Track API call
-        self.total_api_calls = getattr(self.weather_api, 'api_calls_made', 0)
-        
         self.city_label.setText(f"{data['city']}, {data['country']}")
-        self.city_label.setText(f"{data['city']}, {data['country']}")
-        self.temp_label.setText(self.format_temperature(data['temperature']))
-        self.description_label.setText(data['description'].title())
-        
-        
-        
-        
-        # Format sunrise/sunset times
-        from datetime import datetime
-        sunrise_time = datetime.fromtimestamp(data['sunrise'] + data['timezone']).strftime('%H:%M')
-        sunset_time = datetime.fromtimestamp(data['sunset'] + data['timezone']).strftime('%H:%M')
-        
-        
-        # Update background based on weather using weather ID
-        weather_id = data.get('id', 800)
-        self.update_background(weather_id)
+        self.temp_label.setText(self.format_temperature(data["temperature"]))
+        self.description_label.setText(data["description"].title())
+
+        # Info cards
+        self.feels_like_card.value_label.setText(
+            self.format_temperature(data["feels_like"])
+        )
+        self.humidity_card.value_label.setText(f"{data['humidity']}%")
+        self.wind_card.value_label.setText(
+            self.format_wind_speed(data["wind_speed"])
+        )
+        self.pressure_card.value_label.setText(f"{data['pressure']} hPa")
+        self.clouds_card.value_label.setText(f"{data['clouds']}%")
+
+        # Visibility (meters → km)
+        visibility_km = data["visibility"] / 1000
+        self.visibility_card.value_label.setText(f"{visibility_km:.1f} km")
+
+        # Precipitation
+        title, value = self.format_precipitation(data)
+        self.precip_card.title_label.setText(title)
+        self.precip_card.value_label.setText(value)
+
+        # Sunrise / Sunset (local time)
+        self.sunrise_card.value_label.setText(
+            self.format_local_time(data["sunrise"], data["timezone"], self.use_24h)
+        )
+        self.sunset_card.value_label.setText(
+            self.format_local_time(data["sunset"], data["timezone"], self.use_24h)
+        )
+
+        # Background
+        self.update_background(data.get("id", 800))
+
         
     def update_background(self, weather_id):
         """Update background image based on OpenWeatherMap weather ID"""
