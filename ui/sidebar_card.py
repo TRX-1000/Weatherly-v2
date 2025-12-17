@@ -32,7 +32,8 @@ class WeatherCard(QFrame):
             }
         """)
 
-        self.setFixedHeight(90)
+        self.setFixedHeight(105)
+        self.setFixedHeight(100)
 
         # Main layout
         layout = QVBoxLayout(self)
@@ -44,11 +45,11 @@ class WeatherCard(QFrame):
         
         # City label with proper capitalization
         self.city_label = QLabel(capitalize_city_name(self.city))
-        self.city_label.setStyleSheet("font-size: 18px; font-weight: bold; background: none;")
+        self.city_label.setStyleSheet("font-size: 22px; font-weight: bold; background: none;")
 
         # Temperature label
         self.temp_label = QLabel(temp or "--°C")
-        self.temp_label.setStyleSheet("font-size: 22px; font-weight: bold; background: none;")
+        self.temp_label.setStyleSheet("font-size: 26px; font-weight: bold; background: none;")
 
         self.row1.addWidget(self.city_label)
         self.row1.addStretch()
@@ -59,12 +60,12 @@ class WeatherCard(QFrame):
         
         # Condition label
         self.cond_label = QLabel(cond or "Loading...")
-        self.cond_label.setStyleSheet("font-size: 14px; color: #ccc; background: none;")
+        self.cond_label.setStyleSheet("font-size: 15px; color: #ccc; background: none;")
 
         # High/Low temperatures label
         hilo_text = f"H:{hi}  L:{lo}" if hi and lo else "H:--  L:--"
         self.hilo_label = QLabel(hilo_text)
-        self.hilo_label.setStyleSheet("font-size: 14px; color: #aaa; background: none;")
+        self.hilo_label.setStyleSheet("font-size: 15px; color: #aaa; background: none;")
 
         self.row2.addWidget(self.cond_label)
         self.row2.addStretch()

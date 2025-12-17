@@ -129,7 +129,7 @@ class MainWindow(QWidget):
         # ---------------- MAIN LAYOUT ----------------
     
         self.sidebar_collapsed = 0
-        self.sidebar_expanded = 280
+        self.sidebar_expanded = self.window_config.get_sidebar_opened()
         self.current_sidebar_width = self.sidebar_expanded  # Start expanded
 
         self.root = QHBoxLayout(self)

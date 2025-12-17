@@ -87,6 +87,10 @@ class WindowConfig:
         """Get starting Y position for window on current platform"""
         return self.get_current_platform_config().get("start_y", 0)
     
+    def get_sidebar_opened(self):
+        """Get the value of the sidebar when opened"""
+        return self.get_current_platform_config().get("sidebar_opened", 0)
+    
     def get_platform_name(self):
         """Get current platform name"""
         platform_names = {
