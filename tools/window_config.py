@@ -91,10 +91,6 @@ class WindowConfig:
         """Get the value of the sidebar when opened"""
         return self.get_current_platform_config().get("sidebar_opened", 0)
     
-    def get_label_spacing(self):
-        """Get the current value of label spacing"""
-        return self.get_current_platform_config().get("label_spacing", 0)
-    
     def get_platform_name(self):
         """Get current platform name"""
         platform_names = {

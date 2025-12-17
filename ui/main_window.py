@@ -18,6 +18,16 @@ from tools.location_detector import LocationWorker
 \
 from datetime import datetime, timezone, timedelta
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Fetch API keys
+weather_api_key = os.getenv("OPENWEATHER_API_KEY")
+
+if not weather_api_key:
+    raise RuntimeError("OPENWEATHER_API_KEY not found. Please add it to your .env file.")
+
 # Dad jokes for easter egg
 DAD_JOKES = [
     "Why did the weather report go to therapy? It had too many issues with precipitation!",
@@ -94,13 +104,11 @@ class MainWindow(QWidget):
         min_width = self.window_config.get_min_width()
         min_height = self.window_config.get_min_height()
 
-        self.label_spacing = self.window_config.get_label_spacing()
-
         self.setGeometry(start_x, start_y, width, height)
         self.setMinimumSize(min_width, min_height)        
 
         # Initialize APIs
-        self.weather_api = WeatherAPI("69ff8ccadbda20220e57e69ffad4a882")
+        self.weather_api = WeatherAPI(weather_api_key)
         self.total_api_calls = 0
         self.news_api = NewsAPI()
 
@@ -229,13 +237,13 @@ class MainWindow(QWidget):
                 background-color: transparent;
             }
             QScrollBar:vertical {
-                background: #1a1a1a;
-                width: 8px;
-                border-radius: 4px;
+                background: transparent;
+                width: 0px;
+                height: 0px;
             }
             QScrollBar::handle:vertical {
-                background: #333;
-                border-radius: 4px;
+                background: tranparent;
+                border: none;
             }
         """)
 
@@ -367,18 +375,18 @@ class MainWindow(QWidget):
                 border: none;
                 background: transparent;
             }
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
             QScrollBar:vertical {
-                background: #111;
-                width: 10px;
-                border-radius: 5px;
+                background: transparent;
+                width: 0px;
+                height: 0px;
             }
             QScrollBar::handle:vertical {
-                background: #333;
-                border-radius: 5px;
-                min-height: 30px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: #444;
+                background: tranparent;
+                border: none;
             }
         """)
 
@@ -616,16 +624,16 @@ class MainWindow(QWidget):
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.22);
                 border-radius: 16px;
             }
         """)
 
         card.setMinimumHeight(85)
         card.setMaximumHeight(85)
-        card.setMinimumWidth(260)  # Reduced from 250
-        card.setMaximumWidth(260)  # Add this to limit growth
+        card.setMinimumWidth(260) 
+        card.setMaximumWidth(260)  
 
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 10, 15, 10)
@@ -666,39 +674,50 @@ class MainWindow(QWidget):
 
     def create_forecast_section(self):
         """Create the 5-day forecast section"""
+
+        # Wrapper to hold header + forecast container
+        forecast_wrapper = QFrame()
+        wrapper_layout = QVBoxLayout(forecast_wrapper)
+        wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        wrapper_layout.setSpacing(10)
+
+        # Forecast header
         forecast_header = QLabel("🗓️ 5-Day Forecast")
-        forecast_header.setContentsMargins(self.label_spacing, 0, 0, 0)
         forecast_header.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
             color: white;
-            padding-left: 5px;
+            padding-left: 0px;
         """)
-        self.content_layout.addWidget(forecast_header)
-        
+        wrapper_layout.addWidget(forecast_header, alignment=Qt.AlignLeft)
+
+        # Forecast cards container
         self.forecast_container = QFrame()
         self.forecast_container.setObjectName("forecastContainer")
-        self.forecast_container.setStyleSheet("""
-            QFrame#forecastContainer {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-                border-radius: 16px;
-            }
+        self.forecast_container.setStyleSheet(""" QFrame#forecastContainer {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px; }
         """)       
-        
-        self.forecast_container.setFixedWidth(850)  # Changed from setMaximumWidth
-        
+        self.forecast_container.setFixedWidth(850)
+
         self.forecast_layout = QHBoxLayout(self.forecast_container)
-        self.forecast_layout.setSpacing(33)
-        self.forecast_layout.setContentsMargins(20, 20, 20, 20)  # Internal padding for the glassmorphic box
-        
+        self.forecast_layout.setSpacing(30)
+        self.forecast_layout.setContentsMargins(0, 20, 20, 20)
+
+
+        # Add forecast cards
         self.forecast_cards = []
         for i in range(5):
             card = self.create_forecast_card()
             self.forecast_cards.append(card)
             self.forecast_layout.addWidget(card)
-        
-        self.content_layout.addWidget(self.forecast_container, alignment=Qt.AlignCenter)
+
+        wrapper_layout.addWidget(self.forecast_container, alignment=Qt.AlignCenter)
+
+        # Add entire wrapper to content layout
+        self.content_layout.addWidget(forecast_wrapper, alignment=Qt.AlignCenter)
+
 
     def create_forecast_card(self):
         """Create a single forecast day card"""
@@ -712,7 +731,7 @@ class MainWindow(QWidget):
         card.setFixedSize(190, 220)
         
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(15, 20, 15, 20)
+        layout.setContentsMargins(0, 20, 0, 20)
         layout.setSpacing(12)
         layout.setAlignment(Qt.AlignCenter)
         
@@ -747,45 +766,38 @@ class MainWindow(QWidget):
 
     def create_news_section(self):
         """Create the news section"""
-        news_header = QLabel("📰 Weather News")
-        news_header.setContentsMargins(self.label_spacing, 0, 0, 0)
+
+        # Wrapper to hold header + news container
+        news_wrapper = QFrame()
+        wrapper_layout = QVBoxLayout(news_wrapper)
+        wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        wrapper_layout.setSpacing(10)
+
+        # News header
+        news_header = QLabel("📰 News")
         news_header.setStyleSheet("""
             font-size: 26px; 
             font-weight: bold; 
-            background: none;
             color: white;
-            padding-left: 5px;
+            padding-left: 0px;
             margin-top: 10px;
         """)
-        self.content_layout.addWidget(news_header)  # Keep header left-aligned
-        
-        # Create wrapper with HBoxLayout for centering
-        news_wrapper = QWidget()
-        news_wrapper.setStyleSheet("background: transparent;")
-        news_wrapper_layout = QHBoxLayout(news_wrapper)
-        news_wrapper_layout.setContentsMargins(0, 0, 0, 0)
-        news_wrapper_layout.setSpacing(0)
-        
-        # Add left stretch
-        news_wrapper_layout.addStretch()
-        
-        # News container - fixed width to match forecast
+        wrapper_layout.addWidget(news_header, alignment=Qt.AlignLeft)
+
+        # News container
         self.news_container = QFrame()
         self.news_container.setStyleSheet("background: transparent;")
-        self.news_container.setFixedWidth(850)  # Match forecast width exactly
-        
-        # News layout - NO margins to allow proper centering
+        self.news_container.setFixedWidth(850)
+
         self.news_layout = QVBoxLayout(self.news_container)
         self.news_layout.setSpacing(15)
-        self.news_layout.setContentsMargins(0, 0, 0, 0)  # CRITICAL: No left margin
-        
-        news_wrapper_layout.addWidget(self.news_container)
-        
-        # Add right stretch
-        news_wrapper_layout.addStretch()
-        
-        # Add wrapper to content layout
-        self.content_layout.addWidget(news_wrapper)
+        self.news_layout.setContentsMargins(0, 0, 0, 0)
+
+        wrapper_layout.addWidget(self.news_container, alignment=Qt.AlignCenter)
+
+        # Add entire wrapper to content layout
+        self.content_layout.addWidget(news_wrapper, alignment=Qt.AlignCenter)
+
 
     # ---------------- Weather Data Fetching ----------------
     def load_saved_cities(self):

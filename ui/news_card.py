@@ -26,11 +26,12 @@ class NewsCard(QFrame):
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(8)
+        layout.setSpacing(10)
         
         # Title
         title_label = QLabel(title)
         title_label.setStyleSheet("font-size: 17px; font-weight: bold; color: white; line-height: 1.4; background: none;")
+        title_label.setFixedHeight(35)
         title_label.setMaximumWidth(1000)
         title_label.setWordWrap(True)
         

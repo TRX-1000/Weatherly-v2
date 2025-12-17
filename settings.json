@@ -8,5 +8,5 @@
   "notifs": "hi",
   "delete_all_cities": "delete",
   "sidebar_default": "expanded",
-  "time_format": "12h"
+  "time_format": "24h"
 }
