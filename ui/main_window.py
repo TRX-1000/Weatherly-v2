@@ -154,7 +154,7 @@ class MainWindow(QWidget):
         header_layout.setSpacing(10)
 
         self.menu_button = QPushButton("☰")
-        self.menu_button.setFixedSize(40, 40)
+        self.menu_button.setFixedSize(50, 50)
         self.menu_button.setStyleSheet("""
             QPushButton {
                 font-size: 20px; 
@@ -168,7 +168,7 @@ class MainWindow(QWidget):
         self.menu_button.clicked.connect(self.toggle_sidebar)
 
         sidebar_title = QLabel("Weatherly")
-        sidebar_title.setStyleSheet("font-size: 20px; font-weight: bold; color: white;")
+        sidebar_title.setStyleSheet("font-size: 25px; font-weight: bold; color: white;")
 
         header_layout.addWidget(self.menu_button)
         header_layout.addWidget(sidebar_title)
@@ -285,7 +285,7 @@ class MainWindow(QWidget):
 
         # Left side - Menu button (when collapsed)
         self.floating_menu_button = QPushButton("☰")
-        self.floating_menu_button.setFixedSize(45, 45)
+        self.floating_menu_button.setFixedSize(50, 50)
         self.floating_menu_button.setStyleSheet("""
             QPushButton {
                 font-size: 22px; 
@@ -305,7 +305,7 @@ class MainWindow(QWidget):
 
         # Right side - Refresh button
         self.refresh_button = QPushButton("↻")
-        self.refresh_button.setFixedSize(45, 45)
+        self.refresh_button.setFixedSize(50, 50)
         self.refresh_button.setStyleSheet("""
             QPushButton {
                 background: #262626;
@@ -318,7 +318,7 @@ class MainWindow(QWidget):
         self.refresh_button.clicked.connect(self.on_refresh_clicked)
 
         self.settings_button = QPushButton("⚙️")
-        self.settings_button.setFixedSize(45, 45)
+        self.settings_button.setFixedSize(50, 50)
         self.settings_button.setStyleSheet("""
             QPushButton {
                 background: #262626;
@@ -331,7 +331,7 @@ class MainWindow(QWidget):
         self.settings_button.clicked.connect(self.open_settings)
         
         self.location_button = QPushButton("📍")
-        self.location_button.setFixedSize(45, 45)
+        self.location_button.setFixedSize(50, 50)
         self.location_button.setStyleSheet("""
             QPushButton {
                 background: #262626;
@@ -346,16 +346,11 @@ class MainWindow(QWidget):
 
 
         top_bar_container.addWidget(self.floating_menu_button)
-        top_bar_container.addWidget(center_spacer)
+        top_bar_container.addStretch()
         top_bar_container.addWidget(self.location_button)
         top_bar_container.addWidget(self.settings_button)
         top_bar_container.addWidget(self.refresh_button)
 
-
-        top_bar_container.addWidget(self.floating_menu_button)
-        top_bar_container.addWidget(center_spacer)
-        top_bar_container.addWidget(self.settings_button)
-        top_bar_container.addWidget(self.refresh_button)
 
         right_layout.addLayout(top_bar_container)
 
