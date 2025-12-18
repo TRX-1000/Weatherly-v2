@@ -1087,10 +1087,10 @@ class MainWindow(QWidget):
         from PyQt5.QtWidgets import QDialog, QTextEdit
         import psutil
         import os
-        from datetime import datetime, timedelta
+        from datetime import datetime
             
         dialog = QDialog(self)
-        dialog.setWindowTitle("🔧 Developer Console")
+        dialog.setWindowTitle("🛠️ Developer Console")
         dialog.setModal(True)
         dialog.setFixedSize(600, 500)
         dialog.setStyleSheet("background-color: #0a0a0a;")
@@ -1098,7 +1098,7 @@ class MainWindow(QWidget):
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(20, 20, 20, 20)
             
-        title = QLabel("⚙️ DEVELOPER MODE ACTIVATED")
+        title = QLabel("🛠️ DEVELOPER MODE ACTIVATED")
         title.setStyleSheet("""
             font-size: 22px;
             font-weight: bold;
@@ -1610,7 +1610,8 @@ class MainWindow(QWidget):
         # Default settings
         return {
             "temperature_unit": "celsius",
-            "wind_unit": "metric",
+            "wind_unit": "metric", 
+            "pressure_unit": "hpa",  
             "auto_refresh": True,
             "default_city": "",
             "news_count": "10",
@@ -1659,6 +1660,29 @@ class MainWindow(QWidget):
         if self.settings.get("temperature_unit") == "fahrenheit":
             return (temp_celsius * 9/5) + 32
         return temp_celsius
+    
+    def convert_pressure(self, pressure_hpa):
+        """Convert pressure based on settings"""
+        pressure_unit = self.settings.get("pressure_unit", "hpa")
+        
+        if pressure_unit == "inhg":
+            return pressure_hpa * 0.02953  # Convert hPa to inHg
+        elif pressure_unit == "mmhg":
+            return pressure_hpa * 0.750062  # Convert hPa to mmHg
+        else:
+            return pressure_hpa  # hPa
+
+    def format_pressure(self, pressure_hpa):
+        """Format pressure with correct unit"""
+        converted = self.convert_pressure(pressure_hpa)
+        pressure_unit = self.settings.get("pressure_unit", "hpa")
+        
+        if pressure_unit == "inhg":
+            return f"{converted:.2f} inHg"
+        elif pressure_unit == "mmhg":
+            return f"{converted:.1f} mmHg"
+        else:
+            return f"{int(converted)} hPa"
 
     def format_temperature(self, temp_celsius):
         """Format temperature with correct unit"""
@@ -1668,15 +1692,26 @@ class MainWindow(QWidget):
 
     def convert_wind_speed(self, speed_ms):
         """Convert wind speed based on settings"""
-        if self.settings.get("wind_unit") == "imperial":
+        wind_unit = self.settings.get("wind_unit", "metric")
+        
+        if wind_unit == "imperial":
             return speed_ms * 2.237  # Convert m/s to mph
-        return speed_ms
+        elif wind_unit == "kmph":
+            return speed_ms * 3.6  # Convert m/s to km/h
+        else:
+            return speed_ms  # m/s (metric)
 
     def format_wind_speed(self, speed_ms):
         """Format wind speed with correct unit"""
         converted = self.convert_wind_speed(speed_ms)
-        unit = "mph" if self.settings.get("wind_unit") == "imperial" else "m/s"
-        return f"{converted:.1f} {unit}"
+        wind_unit = self.settings.get("wind_unit", "metric")
+        
+        if wind_unit == "imperial":
+            return f"{converted:.1f} mph"
+        elif wind_unit == "kmph":
+            return f"{converted:.1f} km/h"
+        else:
+            return f"{converted:.1f} m/s"
     
     def format_local_time(self, utc_ts, tz_offset, use_24h):
         local_dt = datetime.fromtimestamp(utc_ts, tz=timezone.utc) + timedelta(seconds=tz_offset)
@@ -1776,7 +1811,7 @@ class MainWindow(QWidget):
         self.city_label.setText(f"{data['city']}, {data['country']}")
         self.temp_label.setText(self.format_temperature(data["temperature"]))
         self.description_label.setText(data["description"].title())
-
+        
         # Info cards
         self.feels_like_card.value_label.setText(
             self.format_temperature(data["feels_like"])
@@ -1785,18 +1820,20 @@ class MainWindow(QWidget):
         self.wind_card.value_label.setText(
             self.format_wind_speed(data["wind_speed"])
         )
-        self.pressure_card.value_label.setText(f"{data['pressure']} hPa")
+        self.pressure_card.value_label.setText(
+            self.format_pressure(data["pressure"])  # CHANGED THIS LINE
+        )
         self.clouds_card.value_label.setText(f"{data['clouds']}%")
-
+        
         # Visibility (meters → km)
         visibility_km = data["visibility"] / 1000
         self.visibility_card.value_label.setText(f"{visibility_km:.1f} km")
-
+        
         # Precipitation
         title, value = self.format_precipitation(data)
         self.precip_card.title_label.setText(title)
         self.precip_card.value_label.setText(value)
-
+        
         # Sunrise / Sunset (local time)
         self.sunrise_card.value_label.setText(
             self.format_local_time(data["sunrise"], data["timezone"], self.use_24h)
@@ -1804,10 +1841,9 @@ class MainWindow(QWidget):
         self.sunset_card.value_label.setText(
             self.format_local_time(data["sunset"], data["timezone"], self.use_24h)
         )
-
+        
         # Background
         self.update_background(data.get("id", 800))
-
         
     def update_background(self, weather_id):
         """Update background image based on OpenWeatherMap weather ID"""

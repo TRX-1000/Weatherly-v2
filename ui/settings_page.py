@@ -124,7 +124,7 @@ class SettingsPage(QWidget):
         self.wind_card = self.create_setting_card(
             "💨 Wind Speed Unit",
             "Choose your preferred wind speed measurement",
-            [("Meters per second (m/s)", "metric"), ("Miles per hour (mph)", "imperial")],
+            [("Meters per second (m/s)", "metric"), ("Miles per hour (mph)", "imperial"), ("Kilometers per hour (kmph)", "kmph")],
             "wind_unit"
         )
         
@@ -151,7 +151,7 @@ class SettingsPage(QWidget):
         self.pressure_card = self.create_setting_card(
             "📉 Pressure Unit",
             "Choose your preferred pressure measurement",
-            [("Hectopascal (hPa)", "hpa"), ("Inches of Mercury (inHg)", "inhg")],
+            [("Hectopascal (hPa)", "hpa"), ("Inches of Mercury (inHg)", "inhg"), ("Millimeters of Mercury (mmHg)", "mmhg")],
             "pressure_unit"
         )
 
@@ -346,9 +346,7 @@ class SettingsPage(QWidget):
 
         layout.addSpacing(20)
 
-        
-        # About Section
-        about_label = QLabel("ℹ️  About Weatherly")
+        about_label = QLabel("ℹ About Weatherly")
         about_label.setStyleSheet("""
             font-size: 32px; 
             font-weight: bold; 
@@ -359,27 +357,37 @@ class SettingsPage(QWidget):
             letter-spacing: -0.5px;
         """)
         layout.addWidget(about_label)
-        
+
         about_frame = QFrame()
         about_frame.setStyleSheet("""
             QFrame {
-                background: #111;
-                border: none;
-                padding: 30px;
+                background: #1a1a1a;
+                border: 1px solid #2a2a2a;
+                border-radius: 20px;
             }
         """)
+
         about_layout = QVBoxLayout(about_frame)
         about_layout.setSpacing(18)
-        
+        about_layout.setContentsMargins(30, 30, 30, 30)
+
+        # App name - subtle and clean
         app_name = QLabel("Weatherly v2.0")
         app_name.setStyleSheet("""
             font-size: 28px; 
             font-weight: bold; 
             color: white; 
             background: none;
+            border: none;
+            letter-spacing: -0.5px;
         """)
-        
-        description = QLabel("Want to contribute explore the code or contribute? Check out the project on GitHub! Feel free to open issues or submit pull requests. Your feedback and contributions are welcome!")
+
+        # Description
+        description = QLabel(
+            "Want to explore the code or contribute? Check out the project on GitHub. "
+            "Feel free to open issues or submit pull requests. "
+            "Your feedback and contributions are welcome."
+        )
         description.setStyleSheet("""
             font-size: 15px; 
             color: #bbb; 
@@ -388,39 +396,44 @@ class SettingsPage(QWidget):
             line-height: 24px;
         """)
         description.setWordWrap(True)
-        
-        github_btn = QPushButton("🔗 View on GitHub")
+
+        # Subtle GitHub button - minimal and clean
+        github_btn = QPushButton("View on GitHub →")
         github_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        github_btn.setFixedHeight(55)
+        github_btn.setFixedHeight(50)
         github_btn.setStyleSheet("""
             QPushButton {
-                background: #262626;
-                color: white;
-                border: 1px solid #3a3a3a;
-                border-radius: 14px;
+                background: rgba(255, 255, 255, 0.05);
+                color: #ccc;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
                 padding: 12px 20px;
-                font-size: 20px;
-                font-weight: 600;
+                font-size: 15px;
+                font-weight: 500;
+                text-align: left;
+                padding-left: 20px;
             }
             QPushButton:hover {
-                background: #2e2e2e;
-                border: 1px solid #444;
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: white;
+            }
+            QPushButton:pressed {
+                background: rgba(255, 255, 255, 0.03);
             }
         """)
         github_btn.clicked.connect(lambda: QDesktopServices.openUrl(
             QUrl("https://github.com/TRX-1000/Weatherly-v2")
         ))
-        
+
         about_layout.addWidget(app_name)
         about_layout.addWidget(description)
-
+        about_layout.addSpacing(5)
         about_layout.addWidget(github_btn)
-        
+
         layout.addWidget(about_frame)
-        
         layout.addSpacing(20)
-        
-        
+
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
 
@@ -591,45 +604,148 @@ class SettingsPage(QWidget):
         return card
     
     def clear_all_cities(self):
-        """Show confirmation dialog and clear all cities"""
-        reply = QMessageBox.question(
-            self,
-            "Clear All Cities",
-            "Are you sure you want to clear all saved cities?\n\nThis action cannot be undone.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
+        """Clear all saved cities from sidebar with styled confirmation dialog"""
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
         
-        if reply == QMessageBox.Yes:
-            self.clear_cities.emit()
-            
-            # Show success message
-            success_msg = QMessageBox(self)
-            success_msg.setIcon(QMessageBox.Information)
-            success_msg.setWindowTitle("Cities Cleared")
-            success_msg.setText("All saved cities have been cleared successfully.")
-            success_msg.setStyleSheet("""
-                QMessageBox {
-                    background-color: #1a1a1a;
-                }
-                QMessageBox QLabel {
-                    color: white;
-                    font-size: 14px;
-                }
-                QPushButton {
-                    background-color: #5ba3ff;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 8px 20px;
-                    font-size: 14px;
-                    min-width: 80px;
-                }
-                QPushButton:hover {
-                    background-color: #6db5ff;
-                }
-            """)
-            success_msg.exec_()
+        # Create custom dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Clear All Cities")
+        dialog.setModal(True)
+        dialog.setFixedSize(450, 200)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #1a1a1a;
+                border-radius: 16px;
+            }
+        """)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(20)
+        
+        # Title
+        title = QLabel("Clear All Saved Cities?")
+        title.setStyleSheet("""
+            font-size: 22px;
+            font-weight: bold;
+            background: none;
+            color: white;
+        """)
+        
+        # Message
+        message = QLabel("This action cannot be undone. All saved cities will be permanently removed.")
+        message.setStyleSheet("""
+            font-size: 14px;
+            color: #bbb;
+            background: none;
+            line-height: 20px;
+        """)
+        message.setWordWrap(True)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(12)
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setFixedHeight(45)
+        cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background: #262626;
+                color: white;
+                border: 1px solid #3a3a3a;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #2e2e2e;
+                border: 1px solid #444;
+            }
+            QPushButton:pressed {
+                background: #222;
+            }
+        """)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        clear_btn = QPushButton("Clear All")
+        clear_btn.setFixedHeight(45)
+        clear_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        clear_btn.setStyleSheet("""
+            QPushButton {
+                background: #ff6b6b;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #ff7b7b;
+            }
+            QPushButton:pressed {
+                background: #ee5b5b;
+            }
+        """)
+        clear_btn.clicked.connect(dialog.accept)
+        
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(clear_btn)
+        
+        layout.addWidget(title)
+        layout.addWidget(message)
+        layout.addStretch()
+        layout.addLayout(button_layout)
+        
+        # Show dialog and proceed only if accepted
+        if dialog.exec_() != QDialog.Accepted:
+            return
+        
+        # If user clicked "Clear All", proceed with clearing
+        # Clear the list
+        self.saved_cities.clear()
+        self.save_cities_to_file()
+        
+        # Remove all cards from UI
+        for city, card in list(self.city_cards.items()):
+            self.sidebar_layout.removeWidget(card)
+            card.deleteLater()
+        
+        self.city_cards.clear()
+        
+        # Clear current weather display
+        self.current_city = None
+        self.city_label.setText("Select a city to view weather")
+        self.temp_label.setText("--°C")
+        self.description_label.setText("--")
+    
+        # Clear info cards
+        self.feels_like_card.value_label.setText("--°C")
+        self.humidity_card.value_label.setText("--%")
+        self.wind_card.value_label.setText("-- m/s")
+        self.pressure_card.value_label.setText("-- hPa")
+        self.clouds_card.value_label.setText("--%")
+        self.visibility_card.value_label.setText("-- km")
+        self.precip_card.value_label.setText("-- mm")
+        self.sunrise_card.value_label.setText("--:--")
+        self.sunset_card.value_label.setText("--:--")
+        
+        self.clear_news()
+        
+        # Clear forecast
+        for card in self.forecast_cards:
+            card.day_label.setText("--")
+            card.temp_label.setText("--°")
+            card.desc_label.setText("--")
+            card.icon_label.setText("🌤️")
+        
+        # Reset background
+        self.right.setStyleSheet("background-color: #111;")
+        if hasattr(self, 'background_label'):
+            self.background_label.clear()
+        
+        # Clear search bar
+        self.search_bar.clear()
     
     def create_section(self, parent_layout, title, description, options, setting_key):
         """Create a settings section with radio buttons"""
