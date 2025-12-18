@@ -132,7 +132,6 @@ class MainWindow(QWidget):
         self.refresh_click_count = 0
         self.refresh_click_timer = QTimer()
         self.refresh_click_timer.timeout.connect(self.reset_refresh_count)
-        self.refresh_original_icon = "↻"
 
         # Setup refresh timer
         self.refresh_timer = QTimer(self)
@@ -492,6 +491,7 @@ class MainWindow(QWidget):
         """Detect user's location and load weather"""
         # Change button to show loading
         self.location_button.setText("⏳")
+        self.location_button.setIcon(QIcon())  # Clear the icon temporarily while loading
         self.location_button.setEnabled(False)
         
         # Create worker thread
@@ -502,7 +502,13 @@ class MainWindow(QWidget):
     
     def on_location_detected(self, city):
         """Handle successful location detection"""
-        self.location_button.setText("📍")
+        # Restore icon
+        location_pixmap = QPixmap('assets/icons/location.png')
+        if not location_pixmap.isNull():
+            scaled_location = location_pixmap.scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.location_button.setIcon(QIcon(scaled_location))
+            self.location_button.setIconSize(scaled_location.size())
+        self.location_button.setText("")  # Clear text after loading is complete
         self.location_button.setEnabled(True)
         
         # Load weather for detected city
@@ -513,7 +519,13 @@ class MainWindow(QWidget):
     
     def on_location_error(self, error_msg):
         """Handle location detection error"""
-        self.location_button.setText("📍")
+        # Restore icon
+        location_pixmap = QPixmap('assets/icons/location.png')
+        if not location_pixmap.isNull():
+            scaled_location = location_pixmap.scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.location_button.setIcon(QIcon(scaled_location))
+            self.location_button.setIconSize(scaled_location.size())
+        self.location_button.setText("")  # Clear text
         self.location_button.setEnabled(True)
         
         print(f"Location detection error: {error_msg}")
@@ -521,7 +533,7 @@ class MainWindow(QWidget):
         # Show error message
         self.city_label.setText("Location Detection Failed")
         self.description_label.setText(error_msg)
-
+        
     def setup_refresh_timer(self):
         """Setup auto-refresh timer based on settings"""
         self.refresh_timer.stop()
@@ -1582,7 +1594,7 @@ class MainWindow(QWidget):
     def reset_refresh_count(self):
         """Reset refresh click counter"""
         if self.refresh_click_count > 0 and self.refresh_click_count < 15:
-            self.refresh_button.setText(self.refresh_original_icon)
+            self.refresh_button.setText("")
         self.refresh_click_count = 0
         self.refresh_click_timer.stop()
 
