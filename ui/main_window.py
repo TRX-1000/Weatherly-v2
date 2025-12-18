@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QFrame, QLineEdit, QLabel, QScrollArea, QMenu, QAction, QGraphicsBlurEffect, QGridLayout, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal, QTimer, QPoint
-from PyQt5.QtGui import QCursor, QPixmap
+from PyQt5.QtGui import QCursor, QPixmap, QIcon
 
 from ui.sidebar_card import WeatherCard
 from ui.news_card import NewsCard
@@ -317,7 +317,15 @@ class MainWindow(QWidget):
         center_spacer.setSizePolicy(center_spacer.sizePolicy().Expanding, center_spacer.sizePolicy().Fixed)
 
         # Right side - Refresh button
-        self.refresh_button = QPushButton("↻")
+        self.refresh_button = QPushButton()
+        refresh_icon = QPixmap('assets/icons/refresh.png')
+        if not refresh_icon.isNull():
+            # Scale the icon to fit nicely in the button (adjust size as needed)
+            self.refresh_button.setIcon(QIcon(refresh_icon))
+            self.refresh_button.setIconSize(refresh_icon.size())
+        else:
+            # Fallback if icon doesn't load
+            self.refresh_button.setText("↻")
         self.refresh_button.setFixedSize(50, 50)
         self.refresh_button.setStyleSheet("""
             QPushButton {
@@ -330,20 +338,40 @@ class MainWindow(QWidget):
         """)
         self.refresh_button.clicked.connect(self.on_refresh_clicked)
 
-        self.settings_button = QPushButton("⚙️")
-        self.settings_button.setFixedSize(50, 50)
+        self.settings_button = QPushButton()
+        settings_icon = QPixmap('assets/icons/settings.png')
+        if not settings_icon.isNull():
+            # Scale the icon to fit nicely in the button (adjust size as needed)
+            self.settings_button.setIcon(QIcon(settings_icon))
+            self.settings_button.setIconSize(settings_icon.size())
+        else:
+            # Fallback if icon doesn't load
+            self.settings_button.setText("⚙️")
+
         self.settings_button.setStyleSheet("""
             QPushButton {
                 background: #262626;
                 border-radius: 10px;
                 color: white;
-                font-size: 22px;
+                border: none;
             }
-            QPushButton:hover { background: #333; }""")
+            QPushButton:hover { 
+                background: #333; 
+            }
+        """)
+        self.settings_button.setFixedSize(50, 50)
         
         self.settings_button.clicked.connect(self.open_settings)
         
-        self.location_button = QPushButton("📍")
+        self.location_button = QPushButton()
+        location_icon = QPixmap('assets/icons/location.png')
+        if not location_icon.isNull():
+            # Scale the icon to fit nicely in the button (adjust size as needed)
+            self.location_button.setIcon(QIcon(location_icon))
+            self.location_button.setIconSize(location_icon.size())
+        else:
+            # Fallback if icon doesn't load
+            self.location_button.setText("📍")
         self.location_button.setFixedSize(50, 50)
         self.location_button.setStyleSheet("""
             QPushButton {
