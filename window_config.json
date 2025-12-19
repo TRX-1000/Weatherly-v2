@@ -1,12 +1,12 @@
 {
   "Darwin": {
-    "width": 1470,
-    "height": 810,
-    "min_width": 1470,
-    "min_height": 810,
+    "width": 1200,
+    "height": 750,
+    "min_width": 1200,
+    "min_height": 750,
     "start_x": 0,
     "start_y": 0,
-    "sidebar_opened": 310
+    "sidebar_opened": 300
   },
   "Windows": {
     "width": 1350,
@@ -15,6 +15,6 @@
     "min_height": 775,
     "start_x": 100,
     "start_y": 100,
-    "sidebar_opened": 305
+    "sidebar_opened": 300
   }
 }

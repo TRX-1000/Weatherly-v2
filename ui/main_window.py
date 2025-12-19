@@ -1001,9 +1001,7 @@ class MainWindow(QWidget):
             self.add_city_to_sidebar(city)
             
             # Fetch current weather
-            # Fetch current weather
             current_worker = WeatherWorker(self.weather_api, city, "current")
-            
             current_worker.finished.connect(self.update_current_weather)
             current_worker.error.connect(self.show_error)
             current_worker.start()
@@ -1017,6 +1015,9 @@ class MainWindow(QWidget):
             # Fetch news
             self.fetch_news(city)
             
+            # Clear the search bar after starting the search
+            self.search_bar.clear()  # ADD THIS LINE
+            
             if not hasattr(self, 'workers'):
                 self.workers = []
             self.workers.extend([current_worker, forecast_worker])
@@ -1024,7 +1025,7 @@ class MainWindow(QWidget):
             print(f"Error in search_weather: {e}")
             import traceback
             traceback.print_exc()
-    
+        
     def add_city_to_sidebar(self, city):
         """Add a city to the sidebar if it doesn't exist"""
         # Check if city already exists (case-insensitive)
