@@ -124,7 +124,6 @@ class MainWindow(QWidget):
         # Load settings from file
         self.settings_file = "settings.json"
         self.settings = self.load_settings()
-
         self.use_24h = self.settings.get("time_format", "24h") == "24h"
 
 
@@ -1678,7 +1677,6 @@ class MainWindow(QWidget):
         self.settings_page.hide()
 
     def apply_settings(self, new_settings):
-        """Apply new settings"""
         self.settings = new_settings
         self.save_settings_to_file()
 
@@ -1686,15 +1684,10 @@ class MainWindow(QWidget):
         self.use_24h = self.settings.get("time_format", "24h") == "24h"
 
         self.setup_refresh_timer()
-        
-        # Refresh weather with new units if a city is loaded
-        if self.current_city:
-            self.refresh_weather()
-        
-        # Update sunrise/sunset labels if current weather is loaded
-        if hasattr(self, "current_weather_data") and self.current_weather_data:
-            self.update_current_weather(self.current_weather_data)
 
+        # Force immediate UI update
+        if hasattr(self, "current_weather_data"):
+            self.update_current_weather(self.current_weather_data)
 
     def convert_temperature(self, temp_celsius):
         """Convert temperature based on settings"""
@@ -1849,6 +1842,8 @@ class MainWindow(QWidget):
         self.news_layout.addWidget(error_label)
 
     def update_current_weather(self, data):
+        self.current_weather_data = data 
+
         self.city_label.setText(f"{data['city']}, {data['country']}")
         self.temp_label.setText(self.format_temperature(data["temperature"]))
         self.description_label.setText(data["description"].title())

@@ -12,7 +12,7 @@ class NewsCard(QFrame):
         self.setStyleSheet("""
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #262626, stop:1 #1e1e1e);
+                    stop:0 #262626, stop:1 #2e2e2e);
                 border-radius: 16px;
                 border: none;
             }

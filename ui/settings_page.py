@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QRadioButton, QButtonGroup, QScrollArea, QLineEdit, QMessageBox, QGridLayout
+    QPushButton, QFrame, QRadioButton, QButtonGroup, QScrollArea, QLineEdit, QGridLayout
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl
 from PyQt5.QtGui import QDesktopServices, QCursor
